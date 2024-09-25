@@ -5,3 +5,5 @@ def func(x):
 def test_answer():
     print("TESTE")
     assert func(3) == 6, "PASSOU"
+
+test_answer()
