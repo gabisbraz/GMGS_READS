@@ -3,4 +3,5 @@ def func(x):
 
 
 def test_answer():
-    assert func(3) == 6
+    print("TESTE")
+    assert func(3) == 6, "PASSOU"
