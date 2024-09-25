@@ -13,3 +13,13 @@ print("List3 =", List3)
 
 indexvalue = List2[2:6]
 print("The index value are", indexvalue)
+
+
+import bcrypt
+password = b"super secret password"
+hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+
+if bcrypt.checkpw(password, hashed):
+    print("It Matches!")
+else:
+    print("It Does not Match :(")
