@@ -1,27 +1,54 @@
 import bcrypt
-from tinydb import TinyDB, Query
+from tinydb import Query, TinyDB
 from loguru import logger
 
-# Banco de dados (TinyDB)
 db = TinyDB("usuarios.json")
 
 
 class Usuario:
-    def __init__(self, nome, username, email, password):
+    """
+    CLASSE QUE REPRESENTA UM USUÁRIO.
+
+    A CLASSE CONTÉM MÉTODOS PARA CRIAR, SALVAR, E VERIFICAR SENHAS.
+    """
+
+    def __init__(self, nome: str, username: str, email: str, password: str):
+        """
+        INICIALIZA UM NOVO OBJETO 'USUARIO'.
+
+        ARGUMENTOS:
+        - nome: NOME DO USUÁRIO.
+        - username: NOME DE USUÁRIO (LOGIN).
+        - email: EMAIL DO USUÁRIO.
+        - password: SENHA DO USUÁRIO (ANTES DA CRIPTOGRAFIA).
+        """
         self.nome = nome
         self.username = username
         self.email = email
         self.password = self.criptografar_senha(password)
 
-    # Método para criptografar a senha
-    def criptografar_senha(self, senha):
-        # Gerar o salt para a criptografia
+    # MÉTODO PARA CRIPTOGRAFAR A SENHA UTILIZANDO BCRYPT
+    def criptografar_senha(self, senha: str) -> bytes:
+        """
+        CRIPTOGRAFA A SENHA UTILIZANDO O BCRYPT.
+
+        ARGUMENTOS:
+        - senha: A SENHA QUE SERÁ CRIPTOGRAFADA.
+
+        RETORNA:
+        - A SENHA CRIPTOGRAFADA COMO BYTES.
+        """
+        # GERA UM SALT ALEATÓRIO PARA A CRIPTOGRAFIA
         salt = bcrypt.gensalt()
-        # Retornar a senha criptografada
+        # RETORNA A SENHA CRIPTOGRAFADA
         return bcrypt.hashpw(senha.encode("utf-8"), salt)
 
-    # Método para salvar o usuário no banco de dados
-    def salvar(self):
+    # MÉTODO PARA SALVAR O USUÁRIO NO BANCO DE DADOS
+    def salvar(self) -> None:
+        """
+        SALVA O USUÁRIO NO BANCO DE DADOS TINYDB.
+        """
+        # INSERE OS DADOS DO USUÁRIO NO BANCO
         db.insert(
             {
                 "nome": self.nome,
@@ -29,44 +56,70 @@ class Usuario:
                 "email": self.email,
                 "password": self.password.decode(
                     "utf-8"
-                ),  # Decodificar para salvar como string
+                ),  # DECODIFICA PARA SALVAR COMO STRING
             }
         )
 
-    # Método estático para verificar a senha
+    # MÉTODO ESTÁTICO PARA VERIFICAR SE A SENHA DIGITADA É VÁLIDA
     @staticmethod
-    def verificar_senha(password_digitada, password_armazenada):
+    def verificar_senha(password_digitada: str, password_armazenada: str) -> bool:
+        """
+        VERIFICA SE A SENHA DIGITADA É VÁLIDA EM RELAÇÃO À SENHA ARMAZENADA.
+
+        ARGUMENTOS:
+        - password_digitada: A SENHA DIGITADA PELO USUÁRIO.
+        - password_armazenada: A SENHA ARMAZENADA CRIPTOGRAFADA.
+
+        RETORNA:
+        - BOOLEANO INDICANDO SE A SENHA ESTÁ CORRETA OU NÃO.
+        """
+        # COMPARA A SENHA DIGITADA COM A SENHA ARMAZENADA
         return bcrypt.checkpw(
             password_digitada.encode("utf-8"), password_armazenada.encode("utf-8")
         )
 
 
-# Função para criar e armazenar um novo usuário
-def criar_usuario(nome, username, email, password):
+def criar_usuario(nome: str, username: str, email: str, password: str) -> None:
+    """
+    CRIA E SALVA UM NOVO USUÁRIO NO BANCO DE DADOS.
+
+    ARGUMENTOS:
+    - nome: NOME DO USUÁRIO.
+    - username: NOME DE USUÁRIO (LOGIN).
+    - email: EMAIL DO USUÁRIO.
+    - password: SENHA DO USUÁRIO (ANTES DA CRIPTOGRAFIA).
+    """
     novo_usuario = Usuario(nome, username, email, password)
     novo_usuario.salvar()
     logger.info(f"Usuário {nome} criado com sucesso!")
 
 
-# Função para buscar um usuário por username
-def buscar_usuario(username):
+def buscar_usuario(username: str):
+    """
+    BUSCA UM USUÁRIO PELO NOME DE USUÁRIO (USERNAME).
+
+    ARGUMENTOS:
+    - username: NOME DE USUÁRIO PARA REALIZAR A BUSCA.
+
+    RETORNA:
+    - UM DICIONÁRIO COM OS DADOS DO USUÁRIO SE ENCONTRADO, CASO CONTRÁRIO, RETORNA 'None'.
+    """
     UsuarioQuery = Query()
     usuario = db.search(UsuarioQuery.username == username)
     if usuario:
-        return usuario[0]  # Retorna o primeiro usuário encontrado
+        return usuario[0]  # RETORNA O PRIMEIRO USUÁRIO ENCONTRADO
     return None
 
 
-# Exemplo de uso
 if __name__ == "__main__":
-    # Criar um novo usuário
+    # CRIAR UM NOVO USUÁRIO
     criar_usuario("Gabriella Braz", "gabisbraz", "gabibraz15@outlook.com", "senha123")
 
-    # Buscar o usuário pelo username
+    # BUSCAR O USUÁRIO PELO USERNAME
     usuario_encontrado = buscar_usuario("gabisbraz")
     if usuario_encontrado:
         logger.info(f"Usuário encontrado: {usuario_encontrado}")
-        # Verificar a senha
+        # VERIFICAR SE A SENHA ESTÁ CORRETA
         senha_correta = Usuario.verificar_senha(
             "senha123", usuario_encontrado["password"]
         )
