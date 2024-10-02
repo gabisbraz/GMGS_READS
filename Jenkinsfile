@@ -1,17 +1,17 @@
 pipeline {
   agent any
   stages {
-    stage('Install pip') {
+    stage('Install pip3') {
       steps {
-        // Baixa o instalador do pip e o executa
-        sh 'curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py'
-        sh 'python3 get-pip.py --user'  // Instala o pip apenas para o usuário
+        // Atualiza os pacotes e instala o pip
+        sh 'sudo apt-get update && sudo apt-get install -y python3-pip'
       }
     }
+
     stage('Install dependencies') {
       steps {
-        // Instala as dependências usando o pip instalado
-        sh '~/.local/bin/pip3 install --user -r requirements.txt'
+        // Instala as dependências do projeto
+        sh 'pip3 install -r requirements.txt'
       }
     }
     stage('version') {
