@@ -1,5 +1,9 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'python:3.12-slim'  // Esta imagem já possui o venv e o pip instalados
+    }
+  }
   stages {
     stage('Setup Python Virtual Environment') {
       steps {
@@ -9,7 +13,7 @@ pipeline {
     }
     stage('Install dependencies') {
       steps {
-        sh './venv/bin/pip install -r requirements.txt'  // Instala dependências no ambiente virtual
+        sh './venv/bin/pip install -r requirements.txt'  // Instala as dependências no ambiente virtual
       }
     }
     stage('version') {
