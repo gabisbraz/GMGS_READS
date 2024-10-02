@@ -2,8 +2,6 @@ import sys
 
 from pathlib import Path
 
-import pytest
-
 from tinydb import Query
 
 DIR_ROOT = str(Path(__name__).absolute().parents[0])
@@ -18,13 +16,14 @@ except ModuleNotFoundError:
 
 
 # Limpar o banco de dados antes de cada teste
-@pytest.fixture(autouse=True)
+# @pytest.fixture(autouse=True)
 def limpar_banco():
     db.truncate()  # Limpa os dados do TinyDB antes de cada teste
 
 
 # Teste para verificar a criação de um usuário
 def test_criar_usuario():
+    limpar_banco()
     criar_usuario("Gabriella Braz", "gabisbraz", "gabibraz15@outlook.com", "senha123")
 
     # Buscar o usuário criado
@@ -40,6 +39,7 @@ def test_criar_usuario():
 
 # Teste para verificar se a senha foi criptografada corretamente
 def test_senha_criptografada():
+    limpar_banco()
     criar_usuario(
         "Maria Julia de Padua", "majupadua", "majupadua@outlook.com", "senha456"
     )
@@ -54,6 +54,7 @@ def test_senha_criptografada():
 
 # Teste para verificar a função de busca de usuário
 def test_buscar_usuario():
+    limpar_banco()
     criar_usuario("Giovana Liao", "giliao", "giliao@outlook.com", "senha789")
 
     # Buscar o usuário existente
@@ -68,6 +69,7 @@ def test_buscar_usuario():
 
 # Teste para verificar a função de verificação de senha
 def test_verificar_senha():
+    limpar_banco()
     criar_usuario("Giovana Liao", "giliao", "giliao@outlook.com", "senha789")
 
     # Buscar o usuário criado
@@ -85,6 +87,7 @@ def test_verificar_senha():
 
 # Teste para verificar se o banco de dados está sendo limpo entre os testes
 def test_limpeza_banco():
+    limpar_banco()
     _ = Query()
     todos_usuarios = db.all()
     assert len(todos_usuarios) == 0
