@@ -1,17 +1,15 @@
 pipeline {
-  agent any
-  stages {
-    stage('Install pip3') {
-      steps {
-        // Atualiza os pacotes e instala o pip
-        sh 'sudo apt-get update && sudo apt-get install -y python3-pip'
-      }
+  agent {
+    docker {
+      image 'python:3.12-slim'  // Usa uma imagem Docker com Python 3.12 e pip pré-instalado
     }
-
+  }
+  
+  stages {
     stage('Install dependencies') {
       steps {
-        // Instala as dependências do projeto
-        sh 'pip3 install -r requirements.txt'
+        // Instala as dependências diretamente no ambiente Docker
+        sh 'pip install -r requirements.txt'
       }
     }
     stage('version') {
