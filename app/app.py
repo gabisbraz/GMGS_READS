@@ -1,110 +1,177 @@
-import sys
-from pathlib import Path
+import pandas as pd
+from tinydb import TinyDB, Query
+from loguru import logger
 import flet as ft
 
-DIR_ROOT = str(Path(__name__).absolute().parents[0])
-if DIR_ROOT not in sys.path:
-    sys.path.append(DIR_ROOT)
-
-try:
-    from app.utils.usuario import Usuario, buscar_usuario, criar_usuario, db
-except ModuleNotFoundError:
-    from utils.usuario import Usuario, buscar_usuario, criar_usuario, db
+db_livros = TinyDB("livros.json")
 
 
-# FUNÇÃO QUE EXIBE UM ALERTA NA TELA
-def mostrar_alerta(page: ft.Page, titulo: str, mensagem: str) -> None:
+class Livro:
     """
-    EXIBE UM DIÁLOGO DE ALERTA COM TÍTULO E MENSAGEM.
+    CLASSE PARA GERENCIAR A BASE DE DADOS DE LIVROS E REALIZAR CONSULTAS.
+
+    SE O BANCO DE DADOS ESTIVER VAZIO, ELE SERÁ POPULADO A PARTIR DE UM ARQUIVO CSV.
+    """
+
+    def __init__(self, csv_file: str):
+        """
+        INICIALIZA A CLASSE 'LIVRO' E POPULA O BANCO DE DADOS SE ESTIVER VAZIO.
+
+        ARGUMENTOS:
+        - csv_file: O CAMINHO PARA O ARQUIVO CSV COM OS DADOS DOS LIVROS.
+        """
+        if len(db_livros) == 0:
+            logger.info(
+                "Banco de dados de livros está vazio. Populando com dados do CSV..."
+            )
+            self.popular_db(csv_file)
+        else:
+            logger.info("Banco de dados de livros já está populado.")
+
+    def popular_db(self, csv_file: str):
+        """
+        POPULA O BANCO DE DADOS A PARTIR DE UM ARQUIVO CSV.
+
+        ARGUMENTOS:
+        - csv_file: O CAMINHO PARA O ARQUIVO CSV COM OS DADOS DOS LIVROS.
+        """
+        try:
+            df = pd.read_csv(csv_file)
+            for _, row in df.iterrows():
+                db_livros.insert(
+                    {
+                        "bookID": row["bookID"],
+                        "title": row["title"],
+                        "authors": row["authors"],
+                        "average_rating": row["average_rating"],
+                        "isbn": row["isbn"],
+                        "isbn13": row["isbn13"],
+                        "language_code": row["language_code"],
+                        "num_pages": row["num_pages"],
+                        "ratings_count": row["ratings_count"],
+                        "text_reviews_count": row["text_reviews_count"],
+                        "publication_date": row["publication_date"],
+                        "publisher": row["publisher"],
+                    }
+                )
+            logger.info("Banco de dados populado com sucesso!")
+        except FileNotFoundError:
+            logger.error("Arquivo CSV não encontrado!")
+        except Exception as e:
+            logger.error(f"Erro ao popular o banco de dados: {e}")
+
+    def buscar_livro(self, titulo: str):
+        """
+        BUSCA UM LIVRO NO BANCO DE DADOS PELO TÍTULO.
+
+        ARGUMENTOS:
+        - titulo: O TÍTULO DO LIVRO A SER BUSCADO.
+
+        RETORNA:
+        - UM DICIONÁRIO COM AS INFORMAÇÕES DO LIVRO SE ENCONTRADO, SENÃO UM AVISO.
+        """
+        LivroQuery = Query()
+        livro = db_livros.search(LivroQuery.title == titulo)
+        if livro:
+            return livro[0]
+        else:
+            logger.warning(f"Livro '{titulo}' não encontrado.")
+            return None
+
+
+# FUNÇÃO PARA MOSTRAR UM ALERTA DE LIVRO NÃO ENCONTRADO
+def mostrar_alerta_livro_nao_encontrado(page: ft.Page, titulo: str):
+    """
+    MOSTRA UM ALERTA QUANDO O LIVRO NÃO É ENCONTRADO.
 
     ARGUMENTOS:
     - page: OBJETO DA PÁGINA ATUAL DO FLET.
-    - titulo: TEXTO DO TÍTULO DO ALERTA.
-    - mensagem: TEXTO DO CORPO DA MENSAGEM DO ALERTA.
+    - titulo: O TÍTULO DO LIVRO NÃO ENCONTRADO.
     """
-
-    # FUNÇÃO INTERNA PARA FECHAR O DIÁLOGO DE ALERTA
-    def fechar_dialogo(e: ft.ControlEvent) -> None:
-        # DEFINE O ATRIBUTO 'OPEN' DO ALERTA COMO FALSO (FECHA O DIÁLOGO)
-        alerta.open = False
-        page.update()
-
-    # CRIA UM ALERTA UTILIZANDO O COMPONENTE 'ALERTDIALOG' DO FLET
     alerta = ft.AlertDialog(
-        title=ft.Text(titulo),
-        content=ft.Text(mensagem),
-        actions=[
-            ft.TextButton("OK", on_click=fechar_dialogo)  # BOTÃO PARA FECHAR O DIÁLOGO
-        ],
+        title=ft.Text("Livro não encontrado"),
+        content=ft.Text(f"Não foi possível encontrar o livro com título '{titulo}'."),
+        actions=[ft.TextButton("OK", on_click=lambda _: fechar_alerta(page))],
     )
-
-    # ATRIBUI O ALERTA À PÁGINA E O ABRE
     page.dialog = alerta
     alerta.open = True
     page.update()
 
 
-def main(page: ft.Page) -> None:
+# FUNÇÃO PARA FECHAR O ALERTA
+def fechar_alerta(page: ft.Page):
     """
-    FUNÇÃO PRINCIPAL QUE CONSTRÓI A INTERFACE DE LOGIN E CADASTRO NO FLET.
+    FECHA O ALERTA ABERTO.
+
+    ARGUMENTOS:
+    - page: OBJETO DA PÁGINA ATUAL DO FLET.
+    """
+    page.dialog.open = False
+    page.update()
+
+
+# FUNÇÃO QUE LIDA COM A PESQUISA DO LIVRO
+def buscar_livro_e_mostrar(
+    page: ft.Page, livro_instance: Livro, input_pesquisa: ft.TextField
+):
+    """
+    REALIZA A BUSCA PELO LIVRO E MOSTRA AS INFORMAÇÕES NA TELA.
+
+    ARGUMENTOS:
+    - page: OBJETO DA PÁGINA DO FLET.
+    - livro_instance: INSTÂNCIA DA CLASSE LIVRO PARA REALIZAR A BUSCA.
+    - input_pesquisa: CAMPO DE TEXTO ONDE O USUÁRIO DIGITA O TÍTULO DO LIVRO.
+    """
+    titulo = input_pesquisa.value
+    livro = livro_instance.buscar_livro(titulo)
+
+    if livro:
+        # MOSTRA INFORMAÇÕES DO LIVRO ENCONTRADO
+        page.add(
+            ft.Column(
+                [
+                    ft.Text(f"Livro encontrado: {livro['title']}", size=24),
+                    ft.Text(f"Autor(es): {livro['authors']}", size=18),
+                    ft.Text(f"Avaliação: {livro['average_rating']}", size=18),
+                    ft.Text(f"ISBN: {livro['isbn']}", size=18),
+                    ft.Text(f"Editora: {livro['publisher']}", size=18),
+                    # Adicione outras informações aqui conforme necessário
+                ],
+                spacing=10,
+            )
+        )
+    else:
+        # MOSTRA ALERTA DE LIVRO NÃO ENCONTRADO
+        mostrar_alerta_livro_nao_encontrado(page, titulo)
+
+
+# FUNÇÃO PRINCIPAL PARA INICIALIZAR A INTERFACE
+def main(page: ft.Page):
+    """
+    FUNÇÃO PRINCIPAL PARA CONSTRUIR A INTERFACE DE BUSCA DE LIVROS.
 
     ARGUMENTOS:
     - page: OBJETO DA PÁGINA PRINCIPAL DO FLET.
     """
+    # INSTANCIAR O OBJETO LIVRO
+    livro_instance = Livro("app/data/books.csv")
 
-    # CONFIGURA O TÍTULO E ALINHAMENTO DA PÁGINA
-    page.title = "Login e Cadastro"
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    # CAMPO DE PESQUISA
+    input_pesquisa = ft.TextField(label="Buscar livro pelo título", width=400)
 
-    # FUNÇÃO PARA CADASTRAR UM NOVO USUÁRIO
-    def cadastrar_usuario(e: ft.ControlEvent) -> None:
-        """
-        LIDA COM A LÓGICA DE CADASTRO DE UM NOVO USUÁRIO.
+    # BOTÃO DE PESQUISA
+    botao_pesquisa = ft.ElevatedButton(
+        "Buscar",
+        on_click=lambda e: buscar_livro_e_mostrar(page, livro_instance, input_pesquisa),
+    )
 
-        ARGUMENTOS:
-        - e: EVENTO DISPARADO PELO BOTÃO DE CADASTRO.
-        """
-
-        # OBTÉM OS VALORES DOS CAMPOS DE TEXTO
-        nome = input_nome.value
-        username = input_username.value
-        email = input_email.value
-        password = input_password.value
-
-        # VERIFICA SE TODOS OS CAMPOS ESTÃO PREENCHIDOS
-        if not nome or not username or not email or not password:
-            mostrar_alerta(page, "Erro", "Por favor, preencha todos os campos.")
-            return
-
-        # VERIFICA SE O USUÁRIO JÁ EXISTE NO BANCO DE DADOS
-        if buscar_usuario(username):
-            mostrar_alerta(page, "Erro", "Usuário já existe.")
-            return
-
-        # CRIA UM NOVO USUÁRIO E MOSTRA UMA MENSAGEM DE SUCESSO
-        criar_usuario(nome, username, email, password)
-        mostrar_alerta(page, "Sucesso", "Usuário cadastrado com sucesso.")
-
-    # CRIA CAMPOS DE ENTRADA DE DADOS PARA NOME, EMAIL E SENHA
-    input_nome = ft.TextField(label="Nome", width=300)
-    input_username = ft.TextField(label="Username", width=300)
-    input_email = ft.TextField(label="Email", width=300)
-    input_password = ft.TextField(label="Senha", password=True, width=300)
-
-    # CRIA O BOTÃO DE CADASTRO
-    botao_cadastro = ft.ElevatedButton("Cadastrar", on_click=cadastrar_usuario)
-
-    # ADICIONA O CONTEÚDO À PÁGINA (CAMPOS E BOTÃO)
+    # ADICIONA O CAMPO E O BOTÃO À PÁGINA
     page.add(
         ft.Column(
             [
-                ft.Text("Cadastrar Novo Usuário", size=30),
-                input_nome,
-                input_username,
-                input_email,
-                input_password,
-                botao_cadastro,
+                ft.Text("Sistema de Consulta de Livros", size=30),
+                input_pesquisa,
+                botao_pesquisa,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
