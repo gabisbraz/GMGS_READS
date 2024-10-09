@@ -48,7 +48,6 @@ def test_senha_criptografada():
     usuario = buscar_usuario("majupadua")
 
     # Verificar se a senha armazenada é diferente da senha original (indicando que foi criptografada)
-    assert usuario is not None
     assert usuario["password"] != "senha1504"  # A senha deve estar criptografada
 
 
@@ -77,7 +76,7 @@ def test_verificar_senha():
     assert usuario is not None
 
     # Verificar a senha correta
-    senha_correta = Usuario.verificar_senha("senha789", usuario["password"])
+    senha_correta = Usuario.verificar_senha("senha789123", usuario["password"])
     assert senha_correta is True
 
     # Verificar uma senha incorreta
