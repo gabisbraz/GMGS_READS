@@ -4,7 +4,6 @@ from loguru import logger
 
 db = TinyDB("usuarios.json")
 
-
 class Usuario:
     """
     CLASSE QUE REPRESENTA UM USUÁRIO.
@@ -114,6 +113,7 @@ def buscar_usuario(username: str):
 if __name__ == "__main__":
     # CRIAR UM NOVO USUÁRIO
     criar_usuario("Gabriella Braz", "gabisbraz", "gabibraz15@outlook.com", "senha123")
+    criar_usuario("Giovana Liao", "giliao", "giovanaliao@gmail.com", "senha123")
 
     # BUSCAR O USUÁRIO PELO USERNAME
     usuario_encontrado = buscar_usuario("gabisbraz")
@@ -126,3 +126,4 @@ if __name__ == "__main__":
         logger.info("Senha correta!" if senha_correta else "Senha incorreta!")
     else:
         logger.info("Usuário não encontrado.")
+
