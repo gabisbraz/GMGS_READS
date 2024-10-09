@@ -49,7 +49,7 @@ def test_senha_criptografada():
 
     # Verificar se a senha armazenada é diferente da senha original (indicando que foi criptografada)
     assert usuario is not None
-    assert usuario["password"] != "senha456"  # A senha deve estar criptografada
+    assert usuario["password"] != "senha1504"  # A senha deve estar criptografada
 
 
 # Teste para verificar a função de busca de usuário
