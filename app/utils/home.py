@@ -1,106 +1,107 @@
 import flet as ft
 from tela_login import tela_login  # Importa a tela de login
+from tela_login import tela_login_sucesso
 from tela_cadastro import tela_cadastro  # Importa a tela de cadastro
+from tela_cadastro import tela_cadastro_sucesso
 
 def main(page: ft.Page):
     # Define the screen layout
     def home_screen(page: ft.Page):
         page.window_width = 480
         page.window_height = 800
-        page.window_resizable = False  # Impede que a janela seja redimensionada
-        page.window_always_on_top = True  # Opcional, mantém a janela no topo
+        page.window_resizable = False  
+        page.window_always_on_top = True  
+        page.bgcolor = "#FFFFFF"  # Ensure this is set properly
         
-        # Background image
-        background_container = ft.Container(
-            width=480,
-            height=800,
-            image_src="app/assets/image.png",  # Replace with the correct image path
-            image_fit=ft.ImageFit.COVER  # Image covers the entire background
-        )
-        
-        # "NXT Reads" text group
-        text_group = ft.Column(
-            [
-                # Custom font size and font family for "NXT"
-                ft.Text("NXT", size=60, weight="bold", color="black", font_family="Verdana"),
-                
-                # Custom font size and font family for "Reads"
-                ft.Text("Reads", size=60, weight="bold", color="black", font_family="Verdana"),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=0,  # No space between "NXT" and "Reads"
-        )
+        # Ensure the content container fills the entire screen
+        content_container = ft.Container(
+            expand=True,  # Ensures the container fills the entire page
+            bgcolor="#FFFFFF",  # Set the background color to white
+            content=ft.Column(
+                [
+                    # "NXT Reads" text group with spacing and margin
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Text("Welcome to", size=30, weight="bold", color="black", font_family="Sen Extra Bold"),
+                                ft.Text("NXT", size=60, weight="bold", color="black", font_family="Sen Extra Bold"),
+                                ft.Text("Reads", size=60, weight="bold", color="black", font_family="Sen Extra Bold"),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=0
+                        ),
+                        #margin=ft.margin.only(top=20)  # Add top margin for spacing
+                    ),
 
-        # Buttons group
-        buttons_group = ft.Column(
-            [
-                ft.ElevatedButton(
-                    text="Login", 
-                    on_click=lambda _: page.go("/login"),
-                    bgcolor="#D6E0E2", 
-                    color="black",
-                    #width=200,  # Set the width of the button
-                    height=60,  # Set the height of the button
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(size=30, font_family="Arial", weight="bold")  # Font size and family
-                    )
-                ),
-                
-                ft.ElevatedButton(
-                    text="Cadastre-se", 
-                    on_click=lambda _: page.go("/signup"),
-                    bgcolor="#D6E0E2", 
-                    color="black",
-                    #width=200,  # Set the width of the button
-                    height=60,  # Set the height of the button
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(size=30, font_family="Arial", weight="bold")  # Font size and family
-                    )
-                )
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=40,  # Space between the buttons
-        )
+                    # GIF Image with margin for better spacing
+                    ft.Container(
+                        content=ft.Image(
+                            src="app/assets/Literature.gif",  
+                            width=300,
+                            height=300
+                        ),
+                        alignment=ft.alignment.center,
+                        #margin=ft.margin.only(top=10, bottom=10)  # Add margin above and below the image
+                    ),
 
-        # Combine text and buttons, but keep them visually separate
-        content = ft.Column(
-            [
-                # Add some margin to the top of the "NXT Reads" text group
-                ft.Container(
-                    content=text_group,
-                    margin=ft.margin.only(top=90),
-                ),
-                
-                # Space between text and buttons group
-                buttons_group
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=120,  # Space between the text group and buttons group
+                    # Additional text
+                    ft.Text("Find your next favorite book!", size=15, weight="bold", color="black", font_family="Sen Medium"),
+
+                    # Buttons group with spacing adjustments
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.ElevatedButton(
+                                    text="Login", 
+                                    on_click=lambda _: page.go("/login"),
+                                    bgcolor="#D6E0E2", 
+                                    color="black",
+                                    style=ft.ButtonStyle(
+                                        text_style=ft.TextStyle(size=20, font_family="Sen Extra Bold", weight="bold")
+                                    )
+                                ),
+                                ft.ElevatedButton(
+                                    text="Cadastre-se", 
+                                    on_click=lambda _: page.go("/signup"),
+                                    bgcolor="#D6E0E2", 
+                                    color="black",
+                                    style=ft.ButtonStyle(
+                                        text_style=ft.TextStyle(size=20, font_family="Sen Extra Bold", weight="bold")
+                                    )
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=20  # Adjust spacing between buttons
+                        ),
+                        #margin=ft.margin.only(top=10)  # Add margin to separate buttons from the rest of the content
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=15 # Space between the text group, image, and buttons group
+            )
         )
         
-        # Stack background and content
-        return ft.Stack(
-            [
-                background_container,  # Background image
-                ft.Container(content=content, alignment=ft.alignment.center)  # Centralize the content
-            ]
-        )
+        return content_container
 
     def route_change(route):
         page.theme_mode = ft.ThemeMode.LIGHT
-        page.bgcolor = "#FFFFFF"
+        page.bgcolor = "#FFFFFF"  # Ensure this is set properly
         page.views.clear()
 
-        # Define routes for login and signup
+        # Define rotas
         if page.route == "/":
             page.views.append(ft.View("/", [home_screen(page)]))  # Home screen
         elif page.route == "/login":
             page.views.append(ft.View("/login", [tela_login(page)]))  # Login screen
         elif page.route == "/signup":
             page.views.append(ft.View("/signup", [tela_cadastro(page)]))  # Signup screen
+        elif page.route == "/login_sucesso":
+            page.views.append(ft.View("/login_sucesso", [tela_login_sucesso(page)]))  # Tela de login sucesso
+        elif page.route == "/cadastro_sucesso":
+            page.views.append(ft.View("/cadastro_sucesso", [tela_cadastro_sucesso(page)]))
 
         page.update()
 
