@@ -123,6 +123,15 @@ def tela_login_sucesso(page: ft.Page):
                 ft.Text("Login realizado com sucesso!", size=30, weight="bold", color="black"),
                 ft.Image(src="app/assets/Celebration.gif", width=300, height=300),  # Exemplo de GIF ou imagem de sucesso
                 ft.ElevatedButton(
+                    text="Buscar por livros", 
+                    on_click=lambda _: page.go("/busca_livros"),
+                    color="black",  
+                    bgcolor="#D6E0E2", 
+                    style=ft.ButtonStyle(
+                        text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
+                    )
+                ),
+                ft.ElevatedButton(
                     text="Voltar à página inicial", 
                     on_click=lambda _: page.go("/"),
                     color="black",  

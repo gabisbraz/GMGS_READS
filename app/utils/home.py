@@ -3,6 +3,7 @@ from tela_login import tela_login  # Importa a tela de login
 from tela_login import tela_login_sucesso
 from tela_cadastro import tela_cadastro  # Importa a tela de cadastro
 from tela_cadastro import tela_cadastro_sucesso
+from tela_busca import tela_busca
 
 def main(page: ft.Page):
     # Define the screen layout
@@ -102,6 +103,8 @@ def main(page: ft.Page):
             page.views.append(ft.View("/login_sucesso", [tela_login_sucesso(page)]))  # Tela de login sucesso
         elif page.route == "/cadastro_sucesso":
             page.views.append(ft.View("/cadastro_sucesso", [tela_cadastro_sucesso(page)]))
+        elif page.route == "/busca_livros":
+            page.views.append(ft.View("/busca_livros", [tela_busca(page)]))
 
         page.update()
 
