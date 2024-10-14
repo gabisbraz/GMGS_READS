@@ -17,6 +17,8 @@ def tela_busca(page: ft.Page):
     input_pesquisa = ft.TextField(
         label="Título do livro", 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE
     )
 
@@ -74,5 +76,7 @@ def tela_busca(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             expand=True  # Ensure it stretches across the screen
-        )
+        ),
+        border_radius=ft.border_radius.all(20),  # Adiciona bordas arredondadas ao contêiner principal
+        border=ft.BorderSide(2, color="#D6E0E2"),  
     )

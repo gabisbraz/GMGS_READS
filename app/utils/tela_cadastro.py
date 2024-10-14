@@ -7,6 +7,11 @@ def tela_cadastro(page: ft.Page):
     page.window_height = 800
     page.bgcolor = "#FFFFFF"  # Configura o fundo branco para a página
 
+    page.fonts = {
+        "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
+        "Sen Medium": "app/fonts/Sen-Medium.ttf"
+    }
+
     def realizar_cadastro(e):
         nome = name_input.value
         username = username_input.value
@@ -22,18 +27,24 @@ def tela_cadastro(page: ft.Page):
     name_input = ft.TextField(
         label="Nome", 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
     
     username_input = ft.TextField(
         label="Usuário", 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
     
     email_input = ft.TextField(
         label="E-mail", 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
     
@@ -42,6 +53,8 @@ def tela_cadastro(page: ft.Page):
         password=True, 
         can_reveal_password=True, 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
     
@@ -70,27 +83,35 @@ def tela_cadastro(page: ft.Page):
     # Container principal para os elementos de cadastro
     content = ft.Container(
         bgcolor="#FFFFFF",  # Fundo branco
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas
+        padding=20,  # Espaçamento interno
         content=ft.Column(
             [
                 ft.Container(
-                    content=ft.Text("Cadastro", size=50, weight="bold", color="#03103F"),
-                    margin=ft.margin.only(top=20),  
+                    content=ft.Text("Cadastro", size=40, weight="bold", color="#03103F", font_family="Sen Extra Bold"),
+                    margin=ft.margin.only(top=10),  
                 ),
                 ft.Container(
                     content=ft.Image(
                         src="app/assets/Ebook.gif",  
-                        width=300,
-                        height=300
+                        width=250,  # Reduzir o tamanho para melhorar o layout
+                        height=250
                     ),
                     alignment=ft.alignment.center,
-                    #margin=ft.margin.only(top=10, bottom=10)  # Add margin above and below the image
+                    margin=ft.margin.only(bottom=10)  # Margem inferior para espaçamento
                 ),
                 name_input,
                 username_input,
                 email_input,
                 password_input,
-                signup_button,
-                voltar_button,
+                ft.Container(
+                    content=signup_button,
+                    margin=ft.margin.only(top=10)
+                ),
+                ft.Container(
+                    content=voltar_button,
+                    margin=ft.margin.only(top=10)
+                ),
                 resultado,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -103,6 +124,8 @@ def tela_cadastro(page: ft.Page):
     return ft.Container(
         expand=True,  # Certifica-se de que o fundo preencha toda a tela
         bgcolor="#FFFFFF",  # Fundo branco que cobre toda a tela
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas no layout
+        padding=20,
         content=ft.Row(
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -119,34 +142,40 @@ def tela_cadastro_sucesso(page: ft.Page):
 
     content = ft.Container(
         bgcolor="#FFFFFF",
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas
+        padding=20,  # Preenchimento interno para evitar que o conteúdo encoste nas bordas
+        border=ft.BorderSide(2, color="#D6E0E2"),  # Adiciona uma borda visível para destacar o arredondamento
         content=ft.Column(
             [
-                ft.Text("Bem vindo(a)!", size=40, weight="bold", color="black"),
-                ft.Text("Cadastro realizado com sucesso!", size=25, weight="bold", color="black"),
-                ft.Image(src="app/assets/Welcome.gif", width=350, height=350), 
+                ft.Text("Bem vindo(a)!", size=40, weight="bold", color="black", font_family="Sen Extra Bold"),
+                ft.Text("Cadastro realizado com sucesso!", size=25, weight="bold", color="black", font_family="Sen Extra Bold"),
+                ft.Image(src="app/assets/Welcome.gif", width=300, height=300), 
                 ft.ElevatedButton(
                     text="Voltar à página inicial", 
                     on_click=lambda _: page.go("/"),
                     color="black",  
                     bgcolor="#D6E0E2", 
+                    width=280,  # Ajuste da largura do botão
                     style=ft.ButtonStyle(
                         text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
                     )
                 )
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20
+            alignment=ft.MainAxisAlignment.CENTER,  # Centraliza os elementos verticalmente
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # Centraliza os elementos horizontalmente
+            spacing=20  # Espaçamento entre os elementos
         )
     )
 
     return ft.Container(
         expand=True,
         bgcolor="#FFFFFF",
-        content=ft.Row(
+        content=ft.Row(  # Centraliza o conteúdo horizontalmente e verticalmente
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True
-        )
+            expand=True  # Expande para preencher a tela inteira
+        ),
+        border_radius=ft.border_radius.all(20),  # Adiciona bordas arredondadas ao contêiner principal
+        border=ft.BorderSide(2, color="#D6E0E2"),  # Adiciona uma borda ao redor do layout principal
     )

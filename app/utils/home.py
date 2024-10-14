@@ -6,21 +6,27 @@ from tela_cadastro import tela_cadastro_sucesso
 from tela_busca import tela_busca
 
 def main(page: ft.Page):
-    # Define the screen layout
+    # Define o layout da página
+
+    page.fonts = {
+        "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
+        "Sen Medium": "app/fonts/Sen-Medium.ttf"
+    }
+
     def home_screen(page: ft.Page):
         page.window_width = 480
         page.window_height = 800
         page.window_resizable = False  
         page.window_always_on_top = True  
-        page.bgcolor = "#FFFFFF"  # Ensure this is set properly
-        
-        # Ensure the content container fills the entire screen
+
+        # Envolve todo o conteúdo em um Container com bordas arredondadas
         content_container = ft.Container(
-            expand=True,  # Ensures the container fills the entire page
-            bgcolor="#FFFFFF",  # Set the background color to white
+            expand=True,
+            bgcolor="#FFFFFF",  # Define o fundo do Container
+            border_radius=ft.border_radius.all(20),  # Define o raio das bordas
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,  # Garante que o conteúdo não ultrapasse as bordas
             content=ft.Column(
                 [
-                    # "NXT Reads" text group with spacing and margin
                     ft.Container(
                         content=ft.Column(
                             [
@@ -32,10 +38,7 @@ def main(page: ft.Page):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             spacing=0
                         ),
-                        #margin=ft.margin.only(top=20)  # Add top margin for spacing
                     ),
-
-                    # GIF Image with margin for better spacing
                     ft.Container(
                         content=ft.Image(
                             src="app/assets/Literature.gif",  
@@ -43,13 +46,8 @@ def main(page: ft.Page):
                             height=300
                         ),
                         alignment=ft.alignment.center,
-                        #margin=ft.margin.only(top=10, bottom=10)  # Add margin above and below the image
                     ),
-
-                    # Additional text
                     ft.Text("Find your next favorite book!", size=15, weight="bold", color="black", font_family="Sen Medium"),
-
-                    # Buttons group with spacing adjustments
                     ft.Container(
                         content=ft.Column(
                             [
@@ -59,6 +57,7 @@ def main(page: ft.Page):
                                     bgcolor="#D6E0E2", 
                                     color="black",
                                     style=ft.ButtonStyle(
+                                        shape=ft.RoundedRectangleBorder(radius=15),  # Cantos arredondados nos botões
                                         text_style=ft.TextStyle(size=20, font_family="Sen Extra Bold", weight="bold")
                                     )
                                 ),
@@ -68,39 +67,44 @@ def main(page: ft.Page):
                                     bgcolor="#D6E0E2", 
                                     color="black",
                                     style=ft.ButtonStyle(
+                                        shape=ft.RoundedRectangleBorder(radius=15),  # Cantos arredondados nos botões
                                         text_style=ft.TextStyle(size=20, font_family="Sen Extra Bold", weight="bold")
                                     )
                                 ),
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                            spacing=20  # Adjust spacing between buttons
+                            spacing=20
                         ),
-                        #margin=ft.margin.only(top=10)  # Add margin to separate buttons from the rest of the content
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=15 # Space between the text group, image, and buttons group
+                spacing=15
             )
         )
         
-        return content_container
+        # Retorna o Container com as bordas arredondadas
+        return ft.Container(
+            expand=True,
+            content=content_container,
+            alignment=ft.alignment.center
+        )
 
     def route_change(route):
-        page.theme_mode = ft.ThemeMode.LIGHT
-        page.bgcolor = "#FFFFFF"  # Ensure this is set properly
+        #page.theme_mode = ft.ThemeMode.LIGHT
+        #page.bgcolor = "#FFFFFF" 
         page.views.clear()
 
         # Define rotas
         if page.route == "/":
-            page.views.append(ft.View("/", [home_screen(page)]))  # Home screen
+            page.views.append(ft.View("/", [home_screen(page)]))  # Tela inicial
         elif page.route == "/login":
-            page.views.append(ft.View("/login", [tela_login(page)]))  # Login screen
+            page.views.append(ft.View("/login", [tela_login(page)]))  # Tela de login
         elif page.route == "/signup":
-            page.views.append(ft.View("/signup", [tela_cadastro(page)]))  # Signup screen
+            page.views.append(ft.View("/signup", [tela_cadastro(page)]))  # Tela de cadastro
         elif page.route == "/login_sucesso":
-            page.views.append(ft.View("/login_sucesso", [tela_login_sucesso(page)]))  # Tela de login sucesso
+            page.views.append(ft.View("/login_sucesso", [tela_login_sucesso(page)]))
         elif page.route == "/cadastro_sucesso":
             page.views.append(ft.View("/cadastro_sucesso", [tela_cadastro_sucesso(page)]))
         elif page.route == "/busca_livros":
@@ -109,7 +113,7 @@ def main(page: ft.Page):
         page.update()
 
     page.on_route_change = route_change
-    page.go("/")  # Initial route is the home screen
+    page.go("/")  # Rota inicial
 
-# Initialize the app
+# Inicializa o aplicativo
 ft.app(target=main)

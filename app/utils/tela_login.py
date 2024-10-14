@@ -1,14 +1,16 @@
 import flet as ft
 from usuario import buscar_usuario, Usuario  # Importando do arquivo 'usuario.py'
 
-import flet as ft
-from usuario import buscar_usuario, Usuario  # Importando do arquivo 'usuario.py'
-
 def tela_login(page: ft.Page):
     page.title = "Tela de Login"
     page.window_width = 480
     page.window_height = 800
-    page.bgcolor = "#FFFFFF"  # Set the background color for the entire page
+    page.bgcolor = "#FFFFFF"  # Define a cor de fundo da página
+
+    page.fonts = {
+        "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
+        "Sen Medium": "app/fonts/Sen-Medium.ttf"
+    }
 
     def realizar_login(e):
         username = username_input.value
@@ -35,6 +37,8 @@ def tela_login(page: ft.Page):
     username_input = ft.TextField(
         label="Usuário", 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
     
@@ -43,6 +47,8 @@ def tela_login(page: ft.Page):
         password=True, 
         can_reveal_password=True, 
         width=300, 
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
     
@@ -70,12 +76,14 @@ def tela_login(page: ft.Page):
 
     # Main container that will hold all login elements
     content = ft.Container(
-        bgcolor="#FFFFFF",  # White background for the container
+        bgcolor="#FFFFFF",  # Fundo branco
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas
+        padding=20,  # Adiciona um espaçamento interno
         content=ft.Column(
             [
                 ft.Container(
-                    content=ft.Text("Login", size=50, weight="bold", color="#03103F"),
-                    margin=ft.margin.only(top=50),  
+                    content=ft.Text("Login", size=50, weight="bold", color="#03103F", font_family="Sen Extra Bold"),
+                    margin=ft.margin.only(top=40),  
                 ),
                 ft.Container(
                     content=ft.Image(
@@ -84,7 +92,6 @@ def tela_login(page: ft.Page):
                         height=300
                     ),
                     alignment=ft.alignment.center,
-                    #margin=ft.margin.only(top=10, bottom=10)  # Add margin above and below the image
                 ),
                 username_input,
                 password_input,
@@ -94,19 +101,21 @@ def tela_login(page: ft.Page):
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,  # Space between the elements
+            spacing=20,  # Espaço entre os elementos
         )
     )
 
-    # Ensuring that the content stretches to fill the entire width and height of the screen
+    # Garante que o conteúdo preencha toda a largura e altura da tela
     return ft.Container(
-        expand=True,  # This will make the container cover the entire screen width and height
-        bgcolor="#FFFFFF",  # White background to fill the screen
+        expand=True,  # Faz com que o contêiner preencha toda a tela
+        bgcolor="#FFFFFF",  # Fundo branco para toda a tela
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas na tela
+        padding=20,
         content=ft.Row(
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True  # Ensure it stretches across the screen
+            expand=True  # Faz com que o conteúdo se expanda na tela
         )
     )
 
@@ -118,9 +127,12 @@ def tela_login_sucesso(page: ft.Page):
 
     content = ft.Container(
         bgcolor="#FFFFFF",
+        border_radius=ft.border_radius.all(20),  # Aplica a borda arredondada
+        padding=20,  # Adiciona preenchimento interno para que o conteúdo não encoste na borda
+        border=ft.BorderSide(1, color="#D6E0E2"),  # Adiciona uma borda visível para destacar o arredondamento
         content=ft.Column(
             [
-                ft.Text("Login realizado com sucesso!", size=30, weight="bold", color="black"),
+                ft.Text("Login realizado com sucesso!", size=25, weight="bold", color="black", font_family="Sen Extra Bold"),
                 ft.Image(src="app/assets/Celebration.gif", width=300, height=300),  # Exemplo de GIF ou imagem de sucesso
                 ft.ElevatedButton(
                     text="Buscar por livros", 
@@ -150,10 +162,12 @@ def tela_login_sucesso(page: ft.Page):
     return ft.Container(
         expand=True,
         bgcolor="#FFFFFF",
-        content=ft.Row(
+        content=ft.Row(  # Centraliza o conteúdo horizontalmente e verticalmente
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True
-        )
+            expand=True  # Expande para preencher a tela inteira
+        ),
+        border_radius=ft.border_radius.all(20),  # Adiciona bordas arredondadas ao contêiner principal
+        border=ft.BorderSide(2, color="#D6E0E2"),  # Adiciona uma borda ao redor do layout principal
     )

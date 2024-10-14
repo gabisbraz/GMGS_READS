@@ -164,11 +164,11 @@ def buscar_livro_e_mostrar(page: ft.Page, livro_instance: Livro, input_pesquisa:
         resultado.controls.append(
             ft.Column(
                 [
-                    ft.Text(f"Livro encontrado: {livro['title']}", size=24),
-                    ft.Text(f"Autor(es): {livro['authors']}", size=18),
-                    ft.Text(f"Avaliação: {livro['average_rating']}", size=18),
-                    ft.Text(f"ISBN: {livro['isbn']}", size=18),
-                    ft.Text(f"Editora: {livro['publisher']}", size=18),
+                    ft.Text(f"Livro encontrado: {livro['title']}", size=24, color="#000000"),
+                    ft.Text(f"Autor(es): {livro['authors']}", size=18, color="#000000"),
+                    ft.Text(f"Avaliação: {livro['average_rating']}", size=18, color="#000000"),
+                    ft.Text(f"ISBN: {livro['isbn']}", size=18, color="#000000"),
+                    ft.Text(f"Editora: {livro['publisher']}", size=18, color="#000000"),
                     # Adicione outras informações aqui conforme necessário
                 ],
                 spacing=10,
