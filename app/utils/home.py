@@ -115,5 +115,4 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.go("/")  # Rota inicial
 
-app = ft.app(target=main)
-app.start()
+ft.app(target=main)
