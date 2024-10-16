@@ -5,3 +5,4 @@ loguru
 pytest
 pandas
 mysql
+pymysql
