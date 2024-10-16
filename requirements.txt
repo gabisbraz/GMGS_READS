@@ -4,3 +4,4 @@ tinydb
 loguru
 pytest
 pandas
+mysql
