@@ -115,13 +115,5 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.go("/")  # Rota inicial
 
-def test_main():
-    # Simula a execução do app
-    app = ft.app(target=main)
-    app.start()
-
-    # Adicione aqui suas verificações, por exemplo, se um elemento está presente
-    assert "Hello, Flet!" in app.page.controls[0].content
-
-if __name__ == "__main__":
-    test_main()
+app = ft.app(target=main)
+app.start()
