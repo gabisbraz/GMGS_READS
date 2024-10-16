@@ -117,7 +117,7 @@ def main(page: ft.Page):
 
 def test_main():
     # Simula a execução do app
-    app = ft.App(target=main)
+    app = ft.app(target=main)
     app.start()
 
     # Adicione aqui suas verificações, por exemplo, se um elemento está presente
