@@ -21,8 +21,9 @@ jobs:
       with:
         python-version: "3.10"
         
-    - name: Install GStreamer, MPV, and libmpv1
+    - name: Add MPV PPA and install GStreamer, MPV, and libmpv1
       run: |
+        sudo add-apt-repository ppa:mc3man/mpv-tests -y
         sudo apt-get update
         sudo apt-get install -y \
           libgstreamer1.0-0 \
@@ -44,4 +45,4 @@ jobs:
         
     - name: Run the application
       run: |
-        flet run app/utils/home.py
+        flet run app/utils/home.py  # Substitute with the correct path to your script
