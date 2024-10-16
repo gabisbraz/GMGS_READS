@@ -39,4 +39,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run the application
       run: |
-        flet run app/utils/home.py  # Substitua pelo caminho correto para o seu script
+        python app/utils/home.py  # Substitua pelo caminho correto para o seu script
