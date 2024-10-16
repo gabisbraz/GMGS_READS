@@ -12,7 +12,8 @@ permissions:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    # Force the job to run on Ubuntu 20.04 (focal)
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v4
@@ -21,9 +22,8 @@ jobs:
       with:
         python-version: "3.10"
         
-    - name: Add MPV PPA for Focal and install GStreamer, MPV, and libmpv1
+    - name: Install GStreamer and MPV
       run: |
-        sudo add-apt-repository "deb http://ppa.launchpad.net/mc3man/mpv-tests/ubuntu focal main"
         sudo apt-get update
         sudo apt-get install -y \
           libgstreamer1.0-0 \
