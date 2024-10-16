@@ -1,6 +1,20 @@
 import flet as ft
 from usuario import buscar_usuario, Usuario  # Importando do arquivo 'usuario.py'
 
+import mysql.connector
+
+
+# Estabelecer uma conexão com o banco de dados
+def create_connection():
+    connection = mysql.connector.connect(
+        host="db-nxt-reads.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+        user="admin",
+        password="Admin123",
+        database="next_reads_database",
+    )
+    return connection
+
+
 def tela_login(page: ft.Page):
     page.title = "Tela de Login"
     page.window_width = 480
@@ -9,7 +23,7 @@ def tela_login(page: ft.Page):
 
     page.fonts = {
         "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
-        "Sen Medium": "app/fonts/Sen-Medium.ttf"
+        "Sen Medium": "app/fonts/Sen-Medium.ttf",
     }
 
     def realizar_login(e):
@@ -17,7 +31,7 @@ def tela_login(page: ft.Page):
         password = password_input.value
 
         # Busca o usuário no banco de dados
-        usuario_encontrado = buscar_usuario(username)
+        usuario_encontrado = buscar_usuario(create_connection(), username)
 
         if usuario_encontrado:
             # Verifica se a senha está correta
@@ -35,43 +49,43 @@ def tela_login(page: ft.Page):
 
     # Componentes da tela de login
     username_input = ft.TextField(
-        label="Usuário", 
-        width=300, 
+        label="Usuário",
+        width=300,
         color="#000000",
         label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
-    
+
     password_input = ft.TextField(
-        label="Senha", 
-        password=True, 
-        can_reveal_password=True, 
-        width=300, 
+        label="Senha",
+        password=True,
+        can_reveal_password=True,
+        width=300,
         color="#000000",
         label_style=ft.TextStyle(color="#03103F"),
         border=ft.InputBorder.UNDERLINE,
     )
-    
+
     login_button = ft.ElevatedButton(
-        text="Concluir", 
-        on_click=realizar_login, 
-        color="black",  
-        bgcolor="#D6E0E2",  
+        text="Concluir",
+        on_click=realizar_login,
+        color="black",
+        bgcolor="#D6E0E2",
         style=ft.ButtonStyle(
             text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
-        )
+        ),
     )
-    
+
     signup_button = ft.ElevatedButton(
-        text="Cadastrar-se", 
+        text="Cadastrar-se",
         on_click=lambda _: page.go("/signup"),  # Redireciona para a tela de cadastro
-        color="black",  
-        bgcolor="#D6E0E2", 
+        color="black",
+        bgcolor="#D6E0E2",
         style=ft.ButtonStyle(
             text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
-        )
+        ),
     )
-    
+
     resultado = ft.Text()
 
     # Main container that will hold all login elements
@@ -82,14 +96,18 @@ def tela_login(page: ft.Page):
         content=ft.Column(
             [
                 ft.Container(
-                    content=ft.Text("Login", size=50, weight="bold", color="#03103F", font_family="Sen Extra Bold"),
-                    margin=ft.margin.only(top=40),  
+                    content=ft.Text(
+                        "Login",
+                        size=50,
+                        weight="bold",
+                        color="#03103F",
+                        font_family="Sen Extra Bold",
+                    ),
+                    margin=ft.margin.only(top=40),
                 ),
                 ft.Container(
                     content=ft.Image(
-                        src="app/assets/Kids reading.gif",  
-                        width=300,
-                        height=300
+                        src="app/assets/Kids reading.gif", width=300, height=300
                     ),
                     alignment=ft.alignment.center,
                 ),
@@ -102,7 +120,7 @@ def tela_login(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=20,  # Espaço entre os elementos
-        )
+        ),
     )
 
     # Garante que o conteúdo preencha toda a largura e altura da tela
@@ -115,9 +133,10 @@ def tela_login(page: ft.Page):
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True  # Faz com que o conteúdo se expanda na tela
-        )
+            expand=True,  # Faz com que o conteúdo se expanda na tela
+        ),
     )
+
 
 def tela_login_sucesso(page: ft.Page):
     page.title = "Login Bem-Sucedido"
@@ -129,34 +148,48 @@ def tela_login_sucesso(page: ft.Page):
         bgcolor="#FFFFFF",
         border_radius=ft.border_radius.all(20),  # Aplica a borda arredondada
         padding=20,  # Adiciona preenchimento interno para que o conteúdo não encoste na borda
-        border=ft.BorderSide(1, color="#D6E0E2"),  # Adiciona uma borda visível para destacar o arredondamento
+        border=ft.BorderSide(
+            1, color="#D6E0E2"
+        ),  # Adiciona uma borda visível para destacar o arredondamento
         content=ft.Column(
             [
-                ft.Text("Login realizado com sucesso!", size=25, weight="bold", color="black", font_family="Sen Extra Bold"),
-                ft.Image(src="app/assets/Celebration.gif", width=300, height=300),  # Exemplo de GIF ou imagem de sucesso
+                ft.Text(
+                    "Login realizado com sucesso!",
+                    size=25,
+                    weight="bold",
+                    color="black",
+                    font_family="Sen Extra Bold",
+                ),
+                ft.Image(
+                    src="app/assets/Celebration.gif", width=300, height=300
+                ),  # Exemplo de GIF ou imagem de sucesso
                 ft.ElevatedButton(
-                    text="Buscar por livros", 
+                    text="Buscar por livros",
                     on_click=lambda _: page.go("/busca_livros"),
-                    color="black",  
-                    bgcolor="#D6E0E2", 
+                    color="black",
+                    bgcolor="#D6E0E2",
                     style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
-                    )
+                        text_style=ft.TextStyle(
+                            font_family="Sen Extra Bold", weight="bold"
+                        )
+                    ),
                 ),
                 ft.ElevatedButton(
-                    text="Voltar à página inicial", 
+                    text="Voltar à página inicial",
                     on_click=lambda _: page.go("/"),
-                    color="black",  
-                    bgcolor="#D6E0E2", 
+                    color="black",
+                    bgcolor="#D6E0E2",
                     style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
-                    )
-                )
+                        text_style=ft.TextStyle(
+                            font_family="Sen Extra Bold", weight="bold"
+                        )
+                    ),
+                ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20
-        )
+            spacing=20,
+        ),
     )
 
     return ft.Container(
@@ -166,8 +199,12 @@ def tela_login_sucesso(page: ft.Page):
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True  # Expande para preencher a tela inteira
+            expand=True,  # Expande para preencher a tela inteira
         ),
-        border_radius=ft.border_radius.all(20),  # Adiciona bordas arredondadas ao contêiner principal
-        border=ft.BorderSide(2, color="#D6E0E2"),  # Adiciona uma borda ao redor do layout principal
+        border_radius=ft.border_radius.all(
+            20
+        ),  # Adiciona bordas arredondadas ao contêiner principal
+        border=ft.BorderSide(
+            2, color="#D6E0E2"
+        ),  # Adiciona uma borda ao redor do layout principal
     )

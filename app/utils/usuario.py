@@ -1,78 +1,78 @@
+import mysql.connector
 import bcrypt
-from tinydb import Query, TinyDB
 from loguru import logger
 
-db = TinyDB("usuarios.json")
+
+def create_users_table(connection):
+    cursor = connection.cursor()
+    cursor.execute(
+        """
+CREATE TABLE IF NOT EXISTS Usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255),
+    username VARCHAR(255) UNIQUE,
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(255)
+);
+"""
+    )
+    connection.commit()
+
+
+def create_connection():
+    connection = mysql.connector.connect(
+        host="db-nxt-reads.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+        user="admin",
+        password="Admin123",
+        database="next_reads_database",
+    )
+    create_users_table(connection)
+    return connection
+
 
 class Usuario:
     """
     CLASSE QUE REPRESENTA UM USUÁRIO.
-
-    A CLASSE CONTÉM MÉTODOS PARA CRIAR, SALVAR, E VERIFICAR SENHAS.
     """
 
     def __init__(self, nome: str, username: str, email: str, password: str):
         """
         INICIALIZA UM NOVO OBJETO 'USUARIO'.
-
-        ARGUMENTOS:
-        - nome: NOME DO USUÁRIO.
-        - username: NOME DE USUÁRIO (LOGIN).
-        - email: EMAIL DO USUÁRIO.
-        - password: SENHA DO USUÁRIO (ANTES DA CRIPTOGRAFIA).
         """
         self.nome = nome
         self.username = username
         self.email = email
         self.password = self.criptografar_senha(password)
+        self.connection = create_connection()
 
-    # MÉTODO PARA CRIPTOGRAFAR A SENHA UTILIZANDO BCRYPT
     def criptografar_senha(self, senha: str) -> bytes:
         """
         CRIPTOGRAFA A SENHA UTILIZANDO O BCRYPT.
-
-        ARGUMENTOS:
-        - senha: A SENHA QUE SERÁ CRIPTOGRAFADA.
-
-        RETORNA:
-        - A SENHA CRIPTOGRAFADA COMO BYTES.
         """
-        # GERA UM SALT ALEATÓRIO PARA A CRIPTOGRAFIA
         salt = bcrypt.gensalt()
-        # RETORNA A SENHA CRIPTOGRAFADA
         return bcrypt.hashpw(senha.encode("utf-8"), salt)
 
-    # MÉTODO PARA SALVAR O USUÁRIO NO BANCO DE DADOS
     def salvar(self) -> None:
         """
-        SALVA O USUÁRIO NO BANCO DE DADOS TINYDB.
+        SALVA O USUÁRIO NO BANCO DE DADOS MySQL.
         """
-        # INSERE OS DADOS DO USUÁRIO NO BANCO
-        db.insert(
-            {
-                "nome": self.nome,
-                "username": self.username,
-                "email": self.email,
-                "password": self.password.decode(
-                    "utf-8"
-                ),  # DECODIFICA PARA SALVAR COMO STRING
-            }
+        cursor = self.connection.cursor()
+        query = """
+        INSERT INTO Usuarios (nome, username, email, password)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(
+            query,
+            (self.nome, self.username, self.email, self.password.decode("utf-8")),
         )
+        self.connection.commit()
+        logger.info(f"Usuário {self.nome} criado com sucesso!")
 
-    # MÉTODO ESTÁTICO PARA VERIFICAR SE A SENHA DIGITADA É VÁLIDA
     @staticmethod
     def verificar_senha(password_digitada: str, password_armazenada: str) -> bool:
         """
         VERIFICA SE A SENHA DIGITADA É VÁLIDA EM RELAÇÃO À SENHA ARMAZENADA.
-
-        ARGUMENTOS:
-        - password_digitada: A SENHA DIGITADA PELO USUÁRIO.
-        - password_armazenada: A SENHA ARMAZENADA CRIPTOGRAFADA.
-
-        RETORNA:
-        - BOOLEANO INDICANDO SE A SENHA ESTÁ CORRETA OU NÃO.
         """
-        # COMPARA A SENHA DIGITADA COM A SENHA ARMAZENADA
         return bcrypt.checkpw(
             password_digitada.encode("utf-8"), password_armazenada.encode("utf-8")
         )
@@ -80,46 +80,54 @@ class Usuario:
 
 def criar_usuario(nome: str, username: str, email: str, password: str) -> None:
     """
-    CRIA E SALVA UM NOVO USUÁRIO NO BANCO DE DADOS.
-
-    ARGUMENTOS:
-    - nome: NOME DO USUÁRIO.
-    - username: NOME DE USUÁRIO (LOGIN).
-    - email: EMAIL DO USUÁRIO.
-    - password: SENHA DO USUÁRIO (ANTES DA CRIPTOGRAFIA).
+    CRIA E SALVA UM NOVO USUÁRIO NO BANCO DE DADOS MySQL.
     """
     novo_usuario = Usuario(nome, username, email, password)
     novo_usuario.salvar()
-    logger.info(f"Usuário {nome} criado com sucesso!")
 
 
-def buscar_usuario(username: str):
+def select_records(connection):
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM Usuarios")
+    rows = cursor.fetchall()
+    for row in rows:
+        print(row)
+
+
+def buscar_usuario(connection, username: str):
     """
     BUSCA UM USUÁRIO PELO NOME DE USUÁRIO (USERNAME).
-
-    ARGUMENTOS:
-    - username: NOME DE USUÁRIO PARA REALIZAR A BUSCA.
-
-    RETORNA:
-    - UM DICIONÁRIO COM OS DADOS DO USUÁRIO SE ENCONTRADO, CASO CONTRÁRIO, RETORNA 'None'.
     """
-    UsuarioQuery = Query()
-    usuario = db.search(UsuarioQuery.username == username)
+    cursor = connection.cursor()
+    query = "SELECT * FROM Usuarios WHERE username = %s"
+    cursor.execute(query, (username,))
+    usuario = cursor.fetchone()  # Retorna apenas um usuário
     if usuario:
-        return usuario[0]  # RETORNA O PRIMEIRO USUÁRIO ENCONTRADO
+        return {
+            "id": usuario[0],
+            "nome": usuario[1],
+            "username": usuario[2],
+            "email": usuario[3],
+            "password": usuario[4],
+        }  # Mapeia os dados do usuário
     return None
 
 
 if __name__ == "__main__":
-    # CRIAR UM NOVO USUÁRIO
-    criar_usuario("Gabriella Braz", "gabisbraz", "gabibraz15@outlook.com", "senha123")
-    criar_usuario("Giovana Liao", "giliao", "giovanaliao@gmail.com", "senha123")
+    conn = create_connection()
+    create_users_table(conn)  # Criar a tabela de usuários se não existir
 
-    # BUSCAR O USUÁRIO PELO USERNAME
-    usuario_encontrado = buscar_usuario("gabisbraz")
+    # Criar um novo usuário
+    criar_usuario(
+        conn, "Gabriella Braz", "gabisbraz", "gabibraz15@outlook.com", "senha123"
+    )
+    criar_usuario(conn, "Giovana Liao", "giliao", "giovanaliao@gmail.com", "senha123")
+
+    # Buscar o usuário pelo username
+    usuario_encontrado = buscar_usuario(conn, "gabisbraz")
     if usuario_encontrado:
         logger.info(f"Usuário encontrado: {usuario_encontrado}")
-        # VERIFICAR SE A SENHA ESTÁ CORRETA
+        # Verificar se a senha está correta
         senha_correta = Usuario.verificar_senha(
             "senha123", usuario_encontrado["password"]
         )
@@ -127,3 +135,7 @@ if __name__ == "__main__":
     else:
         logger.info("Usuário não encontrado.")
 
+    select_records(conn)
+
+    # Fechar a conexão
+    conn.close()
