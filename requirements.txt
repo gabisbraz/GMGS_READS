@@ -1,0 +1,8 @@
+flet
+bcrypt
+tinydb
+loguru
+pytest
+pandas
+pymysql
+mysql-connector-python
