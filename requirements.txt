@@ -4,6 +4,5 @@ tinydb
 loguru
 pytest
 pandas
-mysql
 pymysql
 mysql-connector-python

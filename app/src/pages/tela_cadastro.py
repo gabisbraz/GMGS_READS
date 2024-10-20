@@ -1,55 +1,63 @@
+import sys
+import base64
+
+from pathlib import Path
+
 import flet as ft
-from usuario import buscar_usuario, Usuario  # Importando do arquivo 'usuario.py'
 
-import mysql.connector
+DIR_ROOT = str(Path(__file__).parents[2])
+if DIR_ROOT not in sys.path:
+    sys.path.append(DIR_ROOT)
 
-
-# Estabelecer uma conexão com o banco de dados
-def create_connection():
-    connection = mysql.connector.connect(
-        host="db-nxt-reads.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
-        user="admin",
-        password="Admin123",
-        database="next_reads_database",
-    )
-    return connection
+from src.classes.usuario import (
+    Usuario,
+)
 
 
-def tela_login(page: ft.Page):
-    page.title = "Tela de Login"
+def tela_cadastro(page: ft.Page, db_connection):
+    page.title = "Tela de Cadastro"
     page.window_width = 480
     page.window_height = 800
-    page.bgcolor = "#FFFFFF"  # Define a cor de fundo da página
+    page.bgcolor = "#FFFFFF"  # Configura o fundo branco para a página
 
     page.fonts = {
         "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
         "Sen Medium": "app/fonts/Sen-Medium.ttf",
     }
 
-    def realizar_login(e):
+    with open("app/assets/ebook.png", "rb") as file:
+        image_ebook = file.read()
+
+    def realizar_cadastro(e):
+        nome = name_input.value
         username = username_input.value
+        email = email_input.value
         password = password_input.value
 
-        # Busca o usuário no banco de dados
-        usuario_encontrado = buscar_usuario(create_connection(), username)
+        # Cria um novo usuário no banco de dados
+        novo_usuario = Usuario(nome, username, email, password)
+        novo_usuario.salvar()
+        page.go("/cadastro_sucesso")
 
-        if usuario_encontrado:
-            # Verifica se a senha está correta
-            if Usuario.verificar_senha(password, usuario_encontrado["password"]):
-                # Redireciona para a tela de sucesso
-                page.go("/login_sucesso")
-            else:
-                resultado.value = "Senha incorreta. Tente novamente."
-                resultado.color = "#dc3545"  # Vermelho para erro
-        else:
-            resultado.value = "Usuário não encontrado."
-            resultado.color = "#dc3545"  # Vermelho para erro
+    # Componentes da tela de cadastro
+    name_input = ft.TextField(
+        label="Nome",
+        width=300,
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
+        border=ft.InputBorder.UNDERLINE,
+    )
 
-        page.update()
-
-    # Componentes da tela de login
     username_input = ft.TextField(
         label="Usuário",
+        width=300,
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
+        border=ft.InputBorder.UNDERLINE,
+    )
+
+    email_input = ft.TextField(
+        label="E-mail",
         width=300,
         color="#000000",
         label_style=ft.TextStyle(color="#03103F"),
@@ -66,19 +74,19 @@ def tela_login(page: ft.Page):
         border=ft.InputBorder.UNDERLINE,
     )
 
-    login_button = ft.ElevatedButton(
+    signup_button = ft.ElevatedButton(
         text="Concluir",
-        on_click=realizar_login,
-        color="black",
+        on_click=realizar_cadastro,
+        color="#03103F",
         bgcolor="#D6E0E2",
         style=ft.ButtonStyle(
             text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
         ),
     )
 
-    signup_button = ft.ElevatedButton(
-        text="Cadastrar-se",
-        on_click=lambda _: page.go("/signup"),  # Redireciona para a tela de cadastro
+    voltar_button = ft.ElevatedButton(
+        text="Voltar",
+        on_click=lambda _: page.go("/"),  # Volta para a tela de login
         color="black",
         bgcolor="#D6E0E2",
         style=ft.ButtonStyle(
@@ -88,97 +96,106 @@ def tela_login(page: ft.Page):
 
     resultado = ft.Text()
 
-    # Main container that will hold all login elements
+    # Container principal para os elementos de cadastro
     content = ft.Container(
         bgcolor="#FFFFFF",  # Fundo branco
         border_radius=ft.border_radius.all(20),  # Bordas arredondadas
-        padding=20,  # Adiciona um espaçamento interno
+        padding=20,  # Espaçamento interno
         content=ft.Column(
             [
                 ft.Container(
                     content=ft.Text(
-                        "Login",
-                        size=50,
+                        "Cadastro",
+                        size=40,
                         weight="bold",
                         color="#03103F",
                         font_family="Sen Extra Bold",
                     ),
-                    margin=ft.margin.only(top=40),
+                    margin=ft.margin.only(top=10),
                 ),
                 ft.Container(
                     content=ft.Image(
-                        src="app/assets/Kids reading.gif", width=300, height=300
+                        src_base64=base64.b64encode(image_ebook).decode("utf-8"),
+                        width=250,  # Reduzir o tamanho para melhorar o layout
+                        height=250,
                     ),
                     alignment=ft.alignment.center,
+                    margin=ft.margin.only(
+                        bottom=10
+                    ),  # Margem inferior para espaçamento
                 ),
+                name_input,
                 username_input,
+                email_input,
                 password_input,
-                login_button,
-                signup_button,
+                ft.Container(content=signup_button, margin=ft.margin.only(top=10)),
+                ft.Container(content=voltar_button, margin=ft.margin.only(top=10)),
                 resultado,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,  # Espaço entre os elementos
+            spacing=10,  # Espaço entre os elementos
         ),
     )
 
-    # Garante que o conteúdo preencha toda a largura e altura da tela
+    # Retorna o layout com fundo branco que preenche a tela inteira
     return ft.Container(
-        expand=True,  # Faz com que o contêiner preencha toda a tela
-        bgcolor="#FFFFFF",  # Fundo branco para toda a tela
-        border_radius=ft.border_radius.all(20),  # Bordas arredondadas na tela
+        expand=True,  # Certifica-se de que o fundo preencha toda a tela
+        bgcolor="#FFFFFF",  # Fundo branco que cobre toda a tela
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas no layout
         padding=20,
         content=ft.Row(
             [content],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True,  # Faz com que o conteúdo se expanda na tela
+            expand=True,  # Garante que o conteúdo seja centralizado e preencha o espaço
         ),
     )
 
 
-def tela_login_sucesso(page: ft.Page):
-    page.title = "Login Bem-Sucedido"
+def tela_cadastro_sucesso(page: ft.Page):
+    page.title = "Cadastro Bem-Sucedido"
     page.window_width = 480
     page.window_height = 800
     page.bgcolor = "#FFFFFF"
 
+    with open("app/assets/welcome.png", "rb") as file:
+        image_welcome = file.read()
+
     content = ft.Container(
         bgcolor="#FFFFFF",
-        border_radius=ft.border_radius.all(20),  # Aplica a borda arredondada
-        padding=20,  # Adiciona preenchimento interno para que o conteúdo não encoste na borda
+        border_radius=ft.border_radius.all(20),  # Bordas arredondadas
+        padding=20,  # Preenchimento interno para evitar que o conteúdo encoste nas bordas
         border=ft.BorderSide(
-            1, color="#D6E0E2"
+            2, color="#D6E0E2"
         ),  # Adiciona uma borda visível para destacar o arredondamento
         content=ft.Column(
             [
                 ft.Text(
-                    "Login realizado com sucesso!",
+                    "Bem vindo(a)!",
+                    size=40,
+                    weight="bold",
+                    color="black",
+                    font_family="Sen Extra Bold",
+                ),
+                ft.Text(
+                    "Cadastro realizado com sucesso!",
                     size=25,
                     weight="bold",
                     color="black",
                     font_family="Sen Extra Bold",
                 ),
                 ft.Image(
-                    src="app/assets/Celebration.gif", width=300, height=300
-                ),  # Exemplo de GIF ou imagem de sucesso
-                ft.ElevatedButton(
-                    text="Buscar por livros",
-                    on_click=lambda _: page.go("/busca_livros"),
-                    color="black",
-                    bgcolor="#D6E0E2",
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(
-                            font_family="Sen Extra Bold", weight="bold"
-                        )
-                    ),
+                    src_base64=base64.b64encode(image_welcome).decode("utf-8"),
+                    width=300,
+                    height=300,
                 ),
                 ft.ElevatedButton(
                     text="Voltar à página inicial",
                     on_click=lambda _: page.go("/"),
                     color="black",
                     bgcolor="#D6E0E2",
+                    width=280,  # Ajuste da largura do botão
                     style=ft.ButtonStyle(
                         text_style=ft.TextStyle(
                             font_family="Sen Extra Bold", weight="bold"
@@ -186,9 +203,9 @@ def tela_login_sucesso(page: ft.Page):
                     ),
                 ),
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,
+            alignment=ft.MainAxisAlignment.CENTER,  # Centraliza os elementos verticalmente
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # Centraliza os elementos horizontalmente
+            spacing=20,  # Espaçamento entre os elementos
         ),
     )
 

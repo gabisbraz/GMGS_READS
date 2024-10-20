@@ -1,9 +1,6 @@
 import pandas as pd
-from tinydb import TinyDB, Query
 from loguru import logger
 import flet as ft
-
-db_livros = TinyDB("livros.json")
 
 
 class Livro:
