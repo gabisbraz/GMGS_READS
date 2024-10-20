@@ -1,5 +1,0 @@
-flet
-bcrypt
-tinydb
-loguru
-pytest
