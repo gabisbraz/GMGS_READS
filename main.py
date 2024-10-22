@@ -173,7 +173,7 @@ def main(page: ft.Page):
             page.views.append(
                 ft.View(
                     "/cadastro_sucesso",
-                    [tela_cadastro_sucesso(page, create_connection())],
+                    [tela_cadastro_sucesso(page)],
                 )
             )
         elif page.route == "/busca_livros":
