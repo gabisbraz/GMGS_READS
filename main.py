@@ -16,6 +16,8 @@ if DIR_ROOT not in sys.path:
 from app.src.pages.tela_login import tela_login, tela_login_sucesso
 from app.src.pages.tela_cadastro import tela_cadastro, tela_cadastro_sucesso
 from app.src.pages.tela_busca import tela_busca
+from app.src.pages.detalhes_livro import detalhes_livro
+from app.src.pages.discover import discover_livros
 
 
 def create_connection():
@@ -178,6 +180,18 @@ def main(page: ft.Page):
             )
         elif page.route == "/busca_livros":
             page.views.append(ft.View("/busca_livros", [tela_busca(page)]))
+        elif page.route == "/discover":
+            page.views.append(
+                ft.View("/discover", [discover_livros(page, create_connection())])
+            )
+        elif page.route.startswith("/detalhes_livro/"):
+            book_id = page.route.split("/")[-1]
+            page.views.append(
+                ft.View(
+                    f"/detalhes_livro/{book_id}",
+                    [detalhes_livro(page, create_connection(), book_id)],
+                )
+            )
 
         page.update()
 

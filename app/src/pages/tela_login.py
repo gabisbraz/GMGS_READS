@@ -192,6 +192,17 @@ def tela_login_sucesso(page: ft.Page):
                     ),
                 ),
                 ft.ElevatedButton(
+                    text="Descobrir novos livros!",
+                    on_click=lambda _: page.go("/discover"),
+                    color="black",
+                    bgcolor="#D6E0E2",
+                    style=ft.ButtonStyle(
+                        text_style=ft.TextStyle(
+                            font_family="Sen Extra Bold", weight="bold"
+                        )
+                    ),
+                ),
+                ft.ElevatedButton(
                     text="Voltar à página inicial",
                     on_click=lambda _: page.go("/"),
                     color="black",

@@ -31,21 +31,20 @@ class Livro:
             logger.error(f"Erro ao conectar ao banco de dados: {err}")
             return None
 
-    def get_books(self):
+    def search_book_by_title(self, title):
         """
-        Recupera uma lista de livros do banco de dados.
+        Recupera um livro específico baseado no título (busca exata).
         """
         try:
             cursor = self.connection.cursor(dictionary=True)
-            cursor.execute(
-                "SELECT bookID, title, authors, average_rating FROM Livros LIMIT 10"
-            )
-            books = cursor.fetchall()
+            query = "SELECT * FROM Livros WHERE title = %s LIMIT 1"
+            cursor.execute(query, (title,))
+            book = cursor.fetchone()
             cursor.close()
-            return books
+            return book
         except mysql.connector.Error as err:
-            logger.error(f"Erro ao recuperar livros: {err}")
-            return []
+            logger.error(f"Erro ao buscar livro pelo título: {err}")
+            return None
 
     def get_book_details(self, book_id):
         """
@@ -62,76 +61,140 @@ class Livro:
             return None
 
 
-def tela_busca(page: ft.Page):
-    page.title = "Livros"
-    livro = Livro()
-
-    def show_book_details(book_id):
-        """Exibe os detalhes do livro em uma nova página."""
-        book = livro.get_book_details(book_id)
-        if book:
-            details_page = ft.Column(
-                [
-                    ft.Text(f"Título: {book['title']}", size=20),
-                    ft.Text(f"Autor(es): {book['authors']}", size=16),
-                    ft.Text(f"Avaliação Média: {book['average_rating']}", size=14),
-                    ft.Text(f"ISBN: {book['isbn']}", size=14),
-                    ft.Text(f"ISBN-13: {book['isbn13']}", size=14),
-                    ft.Text(f"Linguagem: {book['language_code']}", size=14),
-                    ft.Text(f"Número de Páginas: {book['num_pages']}", size=14),
-                    ft.Text(
-                        f"Contagem de Avaliações: {book['ratings_count']}", size=14
-                    ),
-                    ft.Text(
-                        f"Contagem de Resenhas: {book['text_reviews_count']}", size=14
-                    ),
-                    ft.Text(f"Data de Publicação: {book['publication_date']}", size=14),
-                    ft.Text(f"Editora: {book['publisher']}", size=14),
-                    ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda e: load_books()),
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=10,
-            )
-            # Limpa a página atual e exibe a nova página com detalhes
-            page.controls.clear()
-            page.controls.append(details_page)
-            page.update()
-        else:
-            logger.error("Livro não encontrado.")
-
-    def load_books():
-        """Carrega a lista de livros do banco de dados."""
-        page.controls.clear()  # Limpa a página atual
-        books = livro.get_books()
-        for book in books:
-            book_button = ft.ElevatedButton(
-                text=book["title"],
-                on_click=lambda e, id=book["bookID"]: show_book_details(id),
-                bgcolor="#E7E5E2",
-                width=350,
-                opacity=0.6,
-                color="#063E10",
-            )
-            page.controls.append(book_button)
+def buscar_livro_e_mostrar(page, livro_instance, input_pesquisa, resultado):
+    """
+    Função para buscar um livro pelo título e mostrar os detalhes na interface.
+    """
+    titulo_pesquisado = input_pesquisa.value
+    if not titulo_pesquisado:
+        page.snack_bar = ft.SnackBar(
+            ft.Text("Por favor, insira um título para a busca.")
+        )
+        page.snack_bar.open = True
         page.update()
+        return
 
-    load_books()
+    # Busca o livro pelo título exato
+    livro_encontrado = livro_instance.search_book_by_title(titulo_pesquisado)
 
-    # Retornar o contêiner principal que encapsula a lista de livros
-    return ft.Container(
-        expand=True,
-        bgcolor="#FFFFFF",
-        content=ft.Column(  # Centraliza o conteúdo verticalmente
-            page.controls,  # Adiciona os botões de livro
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=10,
-        ),
-        border_radius=ft.border_radius.all(20),  # Adiciona bordas arredondadas
-        border=ft.BorderSide(2, color="#D6E0E2"),  # Adiciona uma borda
+    if livro_encontrado:
+        # Limpa o conteúdo anterior do `resultado`
+        resultado.controls.clear()
+
+        # Adiciona as informações detalhadas do livro na interface
+        resultado.controls.append(ft.Text(f"ID: {livro_encontrado['bookID']}", size=20))
+        resultado.controls.append(
+            ft.Text(f"Título: {livro_encontrado['title']}", size=20)
+        )
+        resultado.controls.append(
+            ft.Text(f"Autor: {livro_encontrado['authors']}", size=20)
+        )
+        resultado.controls.append(
+            ft.Text(f"Avaliação: {livro_encontrado['average_rating']}", size=20)
+        )
+        resultado.controls.append(
+            ft.Text(
+                f"Data de Publicação: {livro_encontrado['publication_date']}", size=20
+            )
+        )  # Supondo que exista um campo para a data
+        resultado.controls.append(
+            ft.Text(f"Número de Páginas: {livro_encontrado['num_pages']}", size=20)
+        )  # Supondo que haja um campo de número de páginas
+
+    else:
+        # Caso o livro não seja encontrado, exibe uma mensagem de aviso
+        resultado.controls.clear()
+        page.snack_bar = ft.SnackBar(
+            ft.Text("Livro não encontrado no banco de dados."), bgcolor="red"
+        )
+        page.snack_bar.open = True
+
+    # Atualiza a página para refletir as mudanças
+    page.update()
+
+
+def tela_busca(page: ft.Page):
+    """
+    Função que constrói e retorna o conteúdo da página de busca de livros.
+    """
+    page.title = "Tela de Busca de Livros"
+    page.window_width = 480
+    page.window_height = 800
+    page.bgcolor = "#FFFFFF"  # Define a cor de fundo da página
+
+    # Instancia o objeto Livro
+    livro_instance = Livro()
+
+    # Campo de pesquisa
+    input_pesquisa = ft.TextField(
+        label="Título do livro",
+        width=300,
+        color="#000000",
+        label_style=ft.TextStyle(color="#03103F"),
+        border=ft.InputBorder.UNDERLINE,
     )
 
+    # Defina uma variável `resultado` para exibir as informações do livro
+    resultado = ft.Column([])  # Inicialmente vazia, será preenchida após a busca
 
-if __name__ == "__main__":
-    ft.app(target=tela_busca)
+    # Botão de pesquisa
+    botao_pesquisa = ft.ElevatedButton(
+        text="Buscar",
+        on_click=lambda e: buscar_livro_e_mostrar(
+            page, livro_instance, input_pesquisa, resultado
+        ),
+        color="black",
+        bgcolor="#D6E0E2",
+        style=ft.ButtonStyle(
+            text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
+        ),
+    )
+
+    # Botão para voltar à página inicial (opcional)
+    botao_voltar = ft.ElevatedButton(
+        text="Voltar para a Página Inicial",
+        on_click=lambda _: page.go("/"),  # Supondo que "/" seja a rota inicial
+        color="black",
+        bgcolor="#D6E0E2",
+        style=ft.ButtonStyle(
+            text_style=ft.TextStyle(font_family="Sen Extra Bold", weight="bold")
+        ),
+    )
+
+    # Main container that will hold all elements for the search
+    content = ft.Container(
+        bgcolor="#FFFFFF",  # White background for the container
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Text(
+                        "Buscar Livro", size=50, weight="bold", color="#03103F"
+                    ),
+                    margin=ft.margin.only(top=50),
+                ),
+                input_pesquisa,
+                botao_pesquisa,
+                botao_voltar,
+                resultado,  # Adiciona o campo `resultado` à interface
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=20,  # Space between the elements
+        ),
+    )
+
+    # Ensuring that the content stretches to fill the entire width and height of the screen
+    return ft.Container(
+        expand=True,  # This will make the container cover the entire screen width and height
+        bgcolor="#FFFFFF",  # White background to fill the screen
+        content=ft.Row(
+            [content],
+            alignment=ft.MainAxisAlignment.CENTER,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True,  # Ensure it stretches across the screen
+        ),
+        border_radius=ft.border_radius.all(
+            20
+        ),  # Adiciona bordas arredondadas ao contêiner principal
+        border=ft.BorderSide(2, color="#D6E0E2"),
+    )
