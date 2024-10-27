@@ -21,8 +21,8 @@ def tela_login(page: ft.Page, db_connection):
     page.bgcolor = "#FFFFFF"
 
     page.fonts = {
-        "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
-        "Sen Medium": "app/fonts/Sen-Medium.ttf",
+        "Sen Extra Bold": "fonts/Sen-ExtraBold.ttf",
+        "Sen Medium": "fonts/Sen-Medium.ttf",
     }
 
     with open("app/assets/kids_reading.png", "rb") as file:
@@ -183,6 +183,17 @@ def tela_login_sucesso(page: ft.Page):
                 ft.ElevatedButton(
                     text="Buscar por livros",
                     on_click=lambda _: page.go("/busca_livros"),
+                    color="black",
+                    bgcolor="#D6E0E2",
+                    style=ft.ButtonStyle(
+                        text_style=ft.TextStyle(
+                            font_family="Sen Extra Bold", weight="bold"
+                        )
+                    ),
+                ),
+                ft.ElevatedButton(
+                    text="Busca Inteligente de livros",
+                    on_click=lambda _: page.go("/busca_livros_sugestao"),
                     color="black",
                     bgcolor="#D6E0E2",
                     style=ft.ButtonStyle(

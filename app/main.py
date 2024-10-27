@@ -13,20 +13,21 @@ DIR_ROOT = str(Path(__file__).parents[0])
 if DIR_ROOT not in sys.path:
     sys.path.append(DIR_ROOT)
 
-from app.src.pages.tela_login import tela_login, tela_login_sucesso
-from app.src.pages.tela_cadastro import tela_cadastro, tela_cadastro_sucesso
-from app.src.pages.tela_busca import tela_busca
-from app.src.pages.detalhes_livro import detalhes_livro
-from app.src.pages.discover import discover_livros
+from src.pages.tela_login import tela_login, tela_login_sucesso
+from src.pages.tela_cadastro import tela_cadastro, tela_cadastro_sucesso
+from src.pages.tela_busca import tela_busca
+from src.pages.detalhes_livro import detalhes_livro
+from src.pages.discover import discover_livros
+from src.pages.busca_livros_sugestao import busca_livros_sugestao
 
 
 def create_connection():
     logger.info("ESTABELECENDO CONEXÃO COM DB")
     connection = mysql.connector.connect(
-        host="db-nxt-reads.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+        host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
         user="admin",
-        password="Admin123",
-        database="next_reads_database",
+        password="admin123",
+        database="nxt_reads_db",
     )
     logger.info("CONEXÃO ESTABELECIDA COM DB")
     return connection
@@ -190,6 +191,13 @@ def main(page: ft.Page):
                 ft.View(
                     f"/detalhes_livro/{book_id}",
                     [detalhes_livro(page, create_connection(), book_id)],
+                )
+            )
+        elif page.route == "/busca_livros_sugestao":
+            page.views.append(
+                ft.View(
+                    "/busca_livros_sugestao",
+                    [busca_livros_sugestao(page, create_connection())],
                 )
             )
 

@@ -1,158 +1,96 @@
-# import pandas as pd
-# from loguru import logger
-# import flet as ft
+import mysql.connector
+import pandas as pd
 
 
-# class Livro:
-#     """
-#     CLASSE PARA GERENCIAR A BASE DE DADOS DE LIVROS E REALIZAR CONSULTAS.
-
-#     SE O BANCO DE DADOS ESTIVER VAZIO, ELE SERÁ POPULADO A PARTIR DE UM ARQUIVO CSV.
-#     """
-
-#     def __init__(self, csv_file: str):
-#         """
-#         INICIALIZA A CLASSE 'LIVRO' E POPULA O BANCO DE DADOS SE ESTIVER VAZIO.
-
-#         ARGUMENTOS:
-#         - csv_file: O CAMINHO PARA O ARQUIVO CSV COM OS DADOS DOS LIVROS.
-#         """
-#         if len(db_livros) == 0:
-#             logger.info(
-#                 "Banco de dados de livros está vazio. Populando com dados do CSV..."
-#             )
-#             self.popular_db(csv_file)
-#         else:
-#             logger.info("Banco de dados de livros já está populado.")
-
-#     def popular_db(self, csv_file: str):
-#         """
-#         POPULA O BANCO DE DADOS A PARTIR DE UM ARQUIVO CSV.
-
-#         ARGUMENTOS:
-#         - csv_file: O CAMINHO PARA O ARQUIVO CSV COM OS DADOS DOS LIVROS.
-#         """
-#         try:
-#             df = pd.read_csv(csv_file)
-#             for _, row in df.iterrows():
-#                 db_livros.insert(
-#                     {
-#                         "bookID": row["bookID"],
-#                         "title": row["title"],
-#                         "authors": row["authors"],
-#                         "average_rating": row["average_rating"],
-#                         "isbn": row["isbn"],
-#                         "isbn13": row["isbn13"],
-#                         "language_code": row["language_code"],
-#                         "num_pages": row["num_pages"],
-#                         "ratings_count": row["ratings_count"],
-#                         "text_reviews_count": row["text_reviews_count"],
-#                         "publication_date": row["publication_date"],
-#                         "publisher": row["publisher"],
-#                     }
-#                 )
-#             logger.info("Banco de dados populado com sucesso!")
-#         except FileNotFoundError:
-#             logger.error("Arquivo CSV não encontrado!")
-#         except Exception as e:
-#             logger.error(f"Erro ao popular o banco de dados: {e}")
-
-#     def buscar_livro(self, titulo: str):
-#         """
-#         BUSCA UM LIVRO NO BANCO DE DADOS PELO TÍTULO.
-
-#         ARGUMENTOS:
-#         - titulo: O TÍTULO DO LIVRO A SER BUSCADO.
-
-#         RETORNA:
-#         - UM DICIONÁRIO COM AS INFORMAÇÕES DO LIVRO SE ENCONTRADO, SENÃO UM AVISO.
-#         """
-#         LivroQuery = Query()
-#         livro = db_livros.search(LivroQuery.title == titulo)
-#         if livro:
-#             return livro[0]
-#         else:
-#             logger.warning(f"Livro '{titulo}' não encontrado.")
-#             return None
+# Estabelecer uma conexão com o banco de dados
+def create_connection():
+    connection = mysql.connector.connect(
+        host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+        user="admin",
+        password="admin123",
+        database="nxt_reads_db",
+    )
+    return connection
 
 
-# # FUNÇÃO PARA MOSTRAR UM ALERTA DE LIVRO NÃO ENCONTRADO
-# def mostrar_alerta_livro_nao_encontrado(page: ft.Page, titulo: str):
-#     """
-#     MOSTRA UM ALERTA QUANDO O LIVRO NÃO É ENCONTRADO.
-
-#     ARGUMENTOS:
-#     - page: OBJETO DA PÁGINA ATUAL DO FLET.
-#     - titulo: O TÍTULO DO LIVRO NÃO ENCONTRADO.
-#     """
-#     alerta = ft.AlertDialog(
-#         title=ft.Text("Livro não encontrado"),
-#         content=ft.Text(f"Não foi possível encontrar o livro com título '{titulo}'."),
-#         actions=[ft.TextButton("OK", on_click=lambda _: fechar_alerta(page))],
-#     )
-#     page.dialog = alerta
-#     alerta.open = True
-#     page.update()
-
-
-# # FUNÇÃO PARA FECHAR O ALERTA
-# def fechar_alerta(page: ft.Page):
-#     """
-#     FECHA O ALERTA ABERTO.
-
-#     ARGUMENTOS:
-#     - page: OBJETO DA PÁGINA ATUAL DO FLET.
-#     """
-#     page.dialog.open = False
-#     page.update()
+def create_table(connection):
+    cursor = connection.cursor()
+    cursor.execute(
+        """
+CREATE TABLE IF NOT EXISTS Livros (
+    bookID INT PRIMARY KEY,
+    title VARCHAR(255),
+    authors VARCHAR(255),
+    average_rating FLOAT,
+    isbn VARCHAR(20),
+    isbn13 VARCHAR(20),
+    language_code VARCHAR(10),
+    num_pages INT,
+    ratings_count INT,
+    text_reviews_count INT,
+    publication_date DATE,
+    publisher VARCHAR(255)
+);
+"""
+    )
+    connection.commit()  # Commit para garantir que a tabela seja criada
 
 
-# # FUNÇÃO QUE LIDA COM A PESQUISA DO LIVRO
-# def buscar_livro_e_mostrar(
-#     page: ft.Page,
-#     livro_instance: Livro,
-#     input_pesquisa: ft.TextField,
-#     resultado: ft.Column,
-# ):
-#     """
-#     REALIZA A BUSCA PELO LIVRO E MOSTRA AS INFORMAÇÕES NA TELA.
+def insert_record(connection, record):
+    cursor = connection.cursor()
+    query = """
+        INSERT INTO Livros (bookID, title, authors, average_rating, isbn, isbn13, language_code, num_pages, ratings_count, text_reviews_count, publication_date, publisher)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.execute(query, record)
+    connection.commit()  # Commit para garantir que a inserção seja salva
 
-#     ARGUMENTOS:
-#     - page: OBJETO DA PÁGINA DO FLET.
-#     - livro_instance: INSTÂNCIA DA CLASSE LIVRO PARA REALIZAR A BUSCA.
-#     - input_pesquisa: CAMPO DE TEXTO ONDE O USUÁRIO DIGITA O TÍTULO DO LIVRO.
-#     - resultado: O CONTAINER QUE SERÁ ATUALIZADO COM O RESULTADO DA BUSCA.
-#     """
-#     titulo = input_pesquisa.value
-#     livro = livro_instance.buscar_livro(titulo)
 
-#     if livro:
-#         # Limpa o conteúdo anterior de `resultado` e adiciona o novo
-#         resultado.controls.clear()
-#         resultado.controls.append(
-#             ft.Column(
-#                 [
-#                     ft.Text(
-#                         f"Livro encontrado: {livro['title']}", size=24, color="#000000"
-#                     ),
-#                     ft.Text(f"Autor(es): {livro['authors']}", size=18, color="#000000"),
-#                     ft.Text(
-#                         f"Avaliação: {livro['average_rating']}",
-#                         size=18,
-#                         color="#000000",
-#                     ),
-#                     ft.Text(f"ISBN: {livro['isbn']}", size=18, color="#000000"),
-#                     ft.Text(f"Editora: {livro['publisher']}", size=18, color="#000000"),
-#                     # Adicione outras informações aqui conforme necessário
-#                 ],
-#                 spacing=10,
-#             )
-#         )
-#     else:
-#         # Mostra um alerta ou atualiza o conteúdo com mensagem de erro
-#         resultado.controls.clear()
-#         resultado.controls.append(
-#             ft.Text(f"Livro '{titulo}' não encontrado.", color="#dc3545")
-#         )
+def delete_record(connection):
+    cursor = connection.cursor()
+    query = "DELETE FROM Livros"
+    cursor.execute(query)
+    connection.commit()
 
-#     page.update()  # Atualiza a página para refletir as mudanças
+
+def select_records(connection):
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM Livros")
+    rows = cursor.fetchall()
+    for row in rows:
+        print(row)
+
+
+def insert_multiple_records(connection, records):
+    cursor = connection.cursor()
+    query = """
+        INSERT INTO Livros (bookID, title, authors, average_rating, isbn, isbn13, language_code, num_pages, ratings_count, text_reviews_count, publication_date, publisher)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.executemany(query, records)
+    connection.commit()  # Commit para garantir que a inserção seja salva
+
+
+# Função principal para executar o código
+if __name__ == "__main__":
+    conn = create_connection()
+    create_table(conn)  # Criar a tabela se não existir
+
+    # # Limpar a tabela Livros
+    # delete_record(conn)
+
+    data = pd.read_csv("app/data/books.csv")
+
+    df = pd.DataFrame(data)
+
+    # Converter os dados do DataFrame em uma lista de tuplas para inserção
+    records_to_insert = list(df.itertuples(index=False, name=None))
+
+    # Inserir múltiplos registros na tabela
+    insert_multiple_records(conn, records_to_insert)
+
+    # Exibir os registros inseridos
+    select_records(conn)
+
+    # Fechar a conexão
+    conn.close()

@@ -20,10 +20,10 @@ class Livro:
         """
         try:
             connection = mysql.connector.connect(
-                host="db-nxt-reads.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+                host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
                 user="admin",
-                password="Admin123",
-                database="next_reads_database",
+                password="admin123",
+                database="nxt_reads_db",
             )
             logger.info("Conexão estabelecida com sucesso!")
             return connection

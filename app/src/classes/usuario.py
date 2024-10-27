@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS Usuarios (
 
 def create_connection():
     connection = mysql.connector.connect(
-        host="db-nxt-reads.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+        host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
         user="admin",
-        password="Admin123",
-        database="next_reads_database",
+        password="admin123",
+        database="nxt_reads_db",
     )
     create_users_table(connection)
     return connection
@@ -116,24 +116,6 @@ def buscar_usuario(connection, username: str):
 if __name__ == "__main__":
     conn = create_connection()
     create_users_table(conn)  # Criar a tabela de usuários se não existir
-
-    # Criar um novo usuário
-    criar_usuario(
-        conn, "Gabriella Braz", "gabisbraz", "gabibraz15@outlook.com", "senha123"
-    )
-    criar_usuario(conn, "Giovana Liao", "giliao", "giovanaliao@gmail.com", "senha123")
-
-    # Buscar o usuário pelo username
-    usuario_encontrado = buscar_usuario(conn, "gabisbraz")
-    if usuario_encontrado:
-        logger.info(f"Usuário encontrado: {usuario_encontrado}")
-        # Verificar se a senha está correta
-        senha_correta = Usuario.verificar_senha(
-            "senha123", usuario_encontrado["password"]
-        )
-        logger.info("Senha correta!" if senha_correta else "Senha incorreta!")
-    else:
-        logger.info("Usuário não encontrado.")
 
     select_records(conn)
 

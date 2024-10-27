@@ -35,8 +35,20 @@ def detalhes_livro(page: ft.Page, connection, book_id):
     else:
         detalhes = ft.Text("Livro não encontrado.", size=20, color="red")
 
+    # Botão para voltar à página de login_sucesso
+    botao_voltar_login_sucesso = ft.ElevatedButton(
+        text="Voltar ao Login",
+        on_click=lambda _: page.go("/login_sucesso"),
+        bgcolor="#D6E0E2",
+        color="black",
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=10),
+            text_style=ft.TextStyle(size=18, font_family="Sen Medium", weight="bold"),
+        ),
+    )
+
     # Botão para voltar à lista de livros
-    botao_voltar = ft.ElevatedButton(
+    botao_voltar_lista = ft.ElevatedButton(
         text="Voltar",
         on_click=lambda _: page.go("/discover"),
         bgcolor="#D6E0E2",
@@ -57,7 +69,8 @@ def detalhes_livro(page: ft.Page, connection, book_id):
                     padding=ft.padding.only(left=50, right=50),
                 ),
                 detalhes,
-                botao_voltar,
+                botao_voltar_login_sucesso,  # Botão para voltar ao login_sucesso
+                botao_voltar_lista,  # Botão para voltar à lista de livros
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
