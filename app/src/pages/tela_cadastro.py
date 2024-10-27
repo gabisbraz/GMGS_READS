@@ -5,11 +5,11 @@ from pathlib import Path
 
 import flet as ft
 
-DIR_ROOT = str(Path(__file__).parents[2])
+DIR_ROOT = str(Path(__file__).parents[3])
 if DIR_ROOT not in sys.path:
     sys.path.append(DIR_ROOT)
 
-from src.classes.usuario import (
+from app.src.classes.usuario import (
     Usuario,
 )
 

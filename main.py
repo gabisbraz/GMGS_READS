@@ -13,12 +13,12 @@ DIR_ROOT = str(Path(__file__).parents[0])
 if DIR_ROOT not in sys.path:
     sys.path.append(DIR_ROOT)
 
-from src.pages.tela_login import tela_login, tela_login_sucesso
-from src.pages.tela_cadastro import tela_cadastro, tela_cadastro_sucesso
-from src.pages.tela_busca import tela_busca
-from src.pages.detalhes_livro import detalhes_livro
-from src.pages.discover import discover_livros
-from src.pages.busca_livros_sugestao import busca_livros_sugestao
+from app.src.pages.tela_login import tela_login, tela_login_sucesso
+from app.src.pages.tela_cadastro import tela_cadastro, tela_cadastro_sucesso
+from app.src.pages.tela_busca import tela_busca
+from app.src.pages.detalhes_livro import detalhes_livro
+from app.src.pages.discover import discover_livros
+from app.src.pages.busca_livros_sugestao import busca_livros_sugestao
 
 
 def create_connection():
