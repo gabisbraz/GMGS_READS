@@ -1,6 +1,9 @@
 import mysql.connector
-import bcrypt
+from passlib.context import CryptContext  # Import passlib
 from loguru import logger
+
+# Setup passlib CryptContext for bcrypt
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_users_table(connection):
@@ -42,15 +45,14 @@ class Usuario:
         self.nome = nome
         self.username = username
         self.email = email
-        self.password = self.criptografar_senha(password)
+        self.password = self.criptografar_senha(password)  # Hash the password
         self.connection = create_connection()
 
-    def criptografar_senha(self, senha: str) -> bytes:
+    def criptografar_senha(self, senha: str) -> str:
         """
-        CRIPTOGRAFA A SENHA UTILIZANDO O BCRYPT.
+        CRIPTOGRAFA A SENHA UTILIZANDO O PASSLIB.
         """
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(senha.encode("utf-8"), salt)
+        return pwd_context.hash(senha)
 
     def salvar(self) -> None:
         """
@@ -63,7 +65,7 @@ class Usuario:
         """
         cursor.execute(
             query,
-            (self.nome, self.username, self.email, self.password.decode("utf-8")),
+            (self.nome, self.username, self.email, self.password),
         )
         self.connection.commit()
         logger.info(f"Usuário {self.nome} criado com sucesso!")
@@ -73,9 +75,7 @@ class Usuario:
         """
         VERIFICA SE A SENHA DIGITADA É VÁLIDA EM RELAÇÃO À SENHA ARMAZENADA.
         """
-        return bcrypt.checkpw(
-            password_digitada.encode("utf-8"), password_armazenada.encode("utf-8")
-        )
+        return pwd_context.verify(password_digitada, password_armazenada)
 
 
 def criar_usuario(nome: str, username: str, email: str, password: str) -> None:

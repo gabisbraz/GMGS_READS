@@ -6,11 +6,11 @@ from pathlib import Path
 
 import flet as ft
 
-DIR_ROOT = str(Path(__file__).parents[3])
+DIR_ROOT = str(Path(__file__).parents[2])
 if DIR_ROOT not in sys.path:
     sys.path.append(DIR_ROOT)
 
-from app.src.classes.usuario import buscar_usuario, Usuario
+from src.classes.usuario import buscar_usuario, Usuario
 
 
 def tela_login(page: ft.Page, db_connection):
@@ -25,7 +25,7 @@ def tela_login(page: ft.Page, db_connection):
         "Sen Medium": "fonts/Sen-Medium.ttf",
     }
 
-    with open("app/assets/kids_reading.png", "rb") as file:
+    with open("assets/kids_reading.png", "rb") as file:
         image_kids_reading = file.read()
 
     def realizar_login(e):
@@ -156,7 +156,7 @@ def tela_login_sucesso(page: ft.Page):
     page.window_height = 800
     page.bgcolor = "#FFFFFF"
 
-    with open("app/assets/celebration.png", "rb") as file:
+    with open("assets/celebration.png", "rb") as file:
         image_celebration = file.read()
 
     content = ft.Container(

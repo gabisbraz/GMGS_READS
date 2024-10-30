@@ -5,11 +5,11 @@ from pathlib import Path
 
 import flet as ft
 
-DIR_ROOT = str(Path(__file__).parents[3])
+DIR_ROOT = str(Path(__file__).parents[2])
 if DIR_ROOT not in sys.path:
     sys.path.append(DIR_ROOT)
 
-from app.src.classes.usuario import (
+from src.classes.usuario import (
     Usuario,
 )
 
@@ -21,11 +21,11 @@ def tela_cadastro(page: ft.Page, db_connection):
     page.bgcolor = "#FFFFFF"  # Configura o fundo branco para a página
 
     page.fonts = {
-        "Sen Extra Bold": "app/fonts/Sen-ExtraBold.ttf",
-        "Sen Medium": "app/fonts/Sen-Medium.ttf",
+        "Sen Extra Bold": "fonts/Sen-ExtraBold.ttf",
+        "Sen Medium": "fonts/Sen-Medium.ttf",
     }
 
-    with open("app/assets/ebook.png", "rb") as file:
+    with open("assets/ebook.png", "rb") as file:
         image_ebook = file.read()
 
     def realizar_cadastro(e):
@@ -159,7 +159,7 @@ def tela_cadastro_sucesso(page: ft.Page):
     page.window_height = 800
     page.bgcolor = "#FFFFFF"
 
-    with open("app/assets/welcome.png", "rb") as file:
+    with open("assets/welcome.png", "rb") as file:
         image_welcome = file.read()
 
     content = ft.Container(

@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # # Limpar a tabela Livros
     # delete_record(conn)
 
-    data = pd.read_csv("app/data/books.csv")
+    data = pd.read_csv("data/books.csv")
 
     df = pd.DataFrame(data)
 
