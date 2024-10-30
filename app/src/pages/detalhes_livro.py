@@ -3,7 +3,50 @@ from loguru import logger
 import flet as ft
 
 
-def detalhes_livro(page: ft.Page, connection, book_id):
+class Livro:
+    """
+    Classe para gerenciar a base de dados de livros e realizar consultas.
+    """
+
+    def __init__(self):
+        """
+        Inicializa a classe 'Livro' e estabelece conexão com o banco de dados.
+        """
+        self.connection = self.create_connection()
+
+    def create_connection(self):
+        """
+        Cria a conexão com o banco de dados MySQL.
+        """
+        try:
+            connection = mysql.connector.connect(
+                host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+                user="admin",
+                password="admin123",
+                database="nxt_reads_db",
+            )
+            logger.info("Conexão estabelecida com sucesso!")
+            return connection
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao conectar ao banco de dados: {err}")
+            return None
+
+    def get_book(self, book_id):
+        """
+        Recupera os detalhes de um livro específico.
+        """
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM Livros WHERE bookID = %s", (book_id,))
+            book = cursor.fetchone()
+            cursor.close()
+            return book
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao recuperar detalhes do livro: {err}")
+            return None
+
+
+def detalhes_livro(page: ft.Page, book_id):
     """
     Página que exibe os detalhes de um livro específico baseado no book_id.
     """
@@ -14,10 +57,9 @@ def detalhes_livro(page: ft.Page, connection, book_id):
     page.window_resizable = False
     page.window_always_on_top = True
 
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM Livros WHERE bookID = %s", (book_id,))
-    livro = cursor.fetchone()
-    cursor.close()
+    livro_instance = Livro()
+
+    livro = livro_instance.get_book(book_id)
 
     # Exibir detalhes do livro ou uma mensagem de erro caso não seja encontrado
     if livro:

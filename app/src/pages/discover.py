@@ -3,7 +3,52 @@ from loguru import logger
 import flet as ft
 
 
-def discover_livros(page: ft.Page, connection):
+class Livro:
+    """
+    Classe para gerenciar a base de dados de livros e realizar consultas.
+    """
+
+    def __init__(self):
+        """
+        Inicializa a classe 'Livro' e estabelece conexão com o banco de dados.
+        """
+        self.connection = self.create_connection()
+
+    def create_connection(self):
+        """
+        Cria a conexão com o banco de dados MySQL.
+        """
+        try:
+            connection = mysql.connector.connect(
+                host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+                user="admin",
+                password="admin123",
+                database="nxt_reads_db",
+            )
+            logger.info("Conexão estabelecida com sucesso!")
+            return connection
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao conectar ao banco de dados: {err}")
+            return None
+
+    def get_book(self):
+        """
+        Recupera os detalhes de um livro específico.
+        """
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT bookID, title, authors, average_rating FROM Livros LIMIT 10"
+            )
+            book = cursor.fetchall()
+            cursor.close()
+            return book
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao recuperar detalhes do livro: {err}")
+            return None
+
+
+def discover_livros(page: ft.Page):
     """
     Página para descobrir vários livros com informações básicas.
     Ao clicar em um livro, redireciona para a página de detalhes do livro.
@@ -15,11 +60,9 @@ def discover_livros(page: ft.Page, connection):
     page.window_resizable = False
     page.window_always_on_top = True
 
-    cursor = connection.cursor(dictionary=True)
-    query = "SELECT bookID, title, authors, average_rating FROM Livros LIMIT 10"
-    cursor.execute(query)
-    livros = cursor.fetchall()
-    cursor.close()
+    livro_instance = Livro()
+
+    livros = livro_instance.get_book()
 
     # Criando uma lista de botões para os livros
     lista_livros = []

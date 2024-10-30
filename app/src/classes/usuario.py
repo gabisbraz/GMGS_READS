@@ -94,14 +94,57 @@ def select_records(connection):
         print(row)
 
 
-def buscar_usuario(connection, username: str):
+class Usuario:
+    """
+    Classe para gerenciar a base de dados de livros e realizar consultas.
+    """
+
+    def __init__(self):
+        """
+        Inicializa a classe 'Livro' e estabelece conexão com o banco de dados.
+        """
+        self.connection = self.create_connection()
+
+    def create_connection(self):
+        """
+        Cria a conexão com o banco de dados MySQL.
+        """
+        try:
+            connection = mysql.connector.connect(
+                host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+                user="admin",
+                password="admin123",
+                database="nxt_reads_db",
+            )
+            logger.info("Conexão estabelecida com sucesso!")
+            return connection
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao conectar ao banco de dados: {err}")
+            return None
+
+    def get_usuario(self, user):
+        """
+        Recupera um livro específico baseado no título (busca exata).
+        """
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            query = "SELECT * FROM Usuarios WHERE username = %s"
+            cursor.execute(query, (user,))
+            book = cursor.fetchone()
+            cursor.close()
+            return book
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao buscar livro pelo título: {err}")
+            return None
+
+
+def buscar_usuario(username: str):
     """
     BUSCA UM USUÁRIO PELO NOME DE USUÁRIO (USERNAME).
     """
-    cursor = connection.cursor()
-    query = "SELECT * FROM Usuarios WHERE username = %s"
-    cursor.execute(query, (username,))
-    usuario = cursor.fetchone()  # Retorna apenas um usuário
+    user_conn = Usuario()
+
+    usuario = user_conn.get_usuario(username)
     if usuario:
         return {
             "id": usuario[0],

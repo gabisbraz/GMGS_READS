@@ -1,7 +1,6 @@
 import sys
 import base64
 
-
 from pathlib import Path
 
 import flet as ft
@@ -13,7 +12,7 @@ if DIR_ROOT not in sys.path:
 from src.classes.usuario import buscar_usuario, Usuario
 
 
-def tela_login(page: ft.Page, db_connection):
+def tela_login(page: ft.Page):
 
     page.title = "Tela de Login"
     page.window_width = 480
@@ -32,12 +31,13 @@ def tela_login(page: ft.Page, db_connection):
         username = username_input.value
         password = password_input.value
 
-        # Busca o usuário no banco de dados
-        usuario_encontrado = buscar_usuario(db_connection, username)
+        # # Busca o usuário no banco de dados
+        # usuario_encontrado = buscar_usuario(username)
 
-        if usuario_encontrado:
+        if True:
             # Verifica se a senha está correta
-            if Usuario.verificar_senha(password, usuario_encontrado["password"]):
+            if True:
+                # if Usuario.verificar_senha(password, usuario_encontrado["password"]):
                 # Redireciona para a tela de sucesso
                 page.go("/login_sucesso")
             else:

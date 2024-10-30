@@ -4,8 +4,29 @@ from loguru import logger
 
 
 class Livro:
-    def __init__(self, connection):
-        self.connection = connection
+
+    def __init__(self):
+        """
+        Inicializa a classe 'Livro' e estabelece conexão com o banco de dados.
+        """
+        self.connection = self.create_connection()
+
+    def create_connection(self):
+        """
+        Cria a conexão com o banco de dados MySQL.
+        """
+        try:
+            connection = mysql.connector.connect(
+                host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
+                user="admin",
+                password="admin123",
+                database="nxt_reads_db",
+            )
+            logger.info("Conexão estabelecida com sucesso!")
+            return connection
+        except mysql.connector.Error as err:
+            logger.error(f"Erro ao conectar ao banco de dados: {err}")
+            return None
 
     def search_books_by_title(self, title_part):
         """
@@ -25,12 +46,12 @@ class Livro:
             return []
 
 
-def busca_livros_sugestao(page: ft.Page, connection):
+def busca_livros_sugestao(page: ft.Page):
     page.title = "Busca de Livros com Sugestões"
     page.window_width = 480
     page.window_height = 800
 
-    livro_instance = Livro(connection)
+    livro_instance = Livro()
 
     # Campo de pesquisa com sugestão
     input_pesquisa = ft.TextField(

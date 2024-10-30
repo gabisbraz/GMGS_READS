@@ -21,18 +21,6 @@ from src.pages.discover import discover_livros
 from src.pages.busca_livros_sugestao import busca_livros_sugestao
 
 
-def create_connection():
-    logger.info("ESTABELECENDO CONEXÃO COM DB")
-    connection = mysql.connector.connect(
-        host="database-1.ctj2rmaeyrwc.us-east-1.rds.amazonaws.com",
-        user="admin",
-        password="admin123",
-        database="nxt_reads_db",
-    )
-    logger.info("CONEXÃO ESTABELECIDA COM DB")
-    return connection
-
-
 def main(page: ft.Page):
 
     page.fonts = {
@@ -163,13 +151,9 @@ def main(page: ft.Page):
         if page.route == "/":
             page.views.append(ft.View("/", [home_screen(page)]))  # Tela inicial
         elif page.route == "/login":
-            page.views.append(
-                ft.View("/login", [tela_login(page, create_connection())])
-            )
+            page.views.append(ft.View("/login", [tela_login(page)]))
         elif page.route == "/signup":
-            page.views.append(
-                ft.View("/signup", [tela_cadastro(page, create_connection())])
-            )
+            page.views.append(ft.View("/signup", [tela_cadastro(page)]))
         elif page.route == "/login_sucesso":
             page.views.append(ft.View("/login_sucesso", [tela_login_sucesso(page)]))
         elif page.route == "/cadastro_sucesso":
@@ -182,22 +166,20 @@ def main(page: ft.Page):
         elif page.route == "/busca_livros":
             page.views.append(ft.View("/busca_livros", [tela_busca(page)]))
         elif page.route == "/discover":
-            page.views.append(
-                ft.View("/discover", [discover_livros(page, create_connection())])
-            )
+            page.views.append(ft.View("/discover", [discover_livros(page)]))
         elif page.route.startswith("/detalhes_livro/"):
             book_id = page.route.split("/")[-1]
             page.views.append(
                 ft.View(
                     f"/detalhes_livro/{book_id}",
-                    [detalhes_livro(page, create_connection(), book_id)],
+                    [detalhes_livro(page, book_id)],
                 )
             )
         elif page.route == "/busca_livros_sugestao":
             page.views.append(
                 ft.View(
                     "/busca_livros_sugestao",
-                    [busca_livros_sugestao(page, create_connection())],
+                    [busca_livros_sugestao(page)],
                 )
             )
 
