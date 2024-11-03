@@ -51,18 +51,19 @@ def busca_livros_sugestao(page: ft.Page):
     page.window_width = 480
     page.window_height = 800
 
-    livro_instance = Livro()
-
     # Campo de pesquisa com sugestão
     input_pesquisa = ft.TextField(
         label="Buscar livro pelo título",
-        width=300,
+        width=480,
         color="#000000",
         label_style=ft.TextStyle(color="#03103F"),
-        border=ft.InputBorder.UNDERLINE,
+        border=ft.InputBorder.OUTLINE,
+        border_radius=20,
+        icon=ft.icons.SEARCH_ROUNDED,
         on_change=lambda e: buscar_sugestoes(
             e.control.value
         ),  # Executa busca ao digitar
+        hint_text="Please enter text here",
     )
 
     # Container para mostrar as sugestões de livros
@@ -72,6 +73,8 @@ def busca_livros_sugestao(page: ft.Page):
         """
         Função que busca e exibe sugestões de livros enquanto o usuário digita.
         """
+        livro_instance = Livro()
+
         if len(search_term) < 2:
             sugestoes_container.controls.clear()
             page.update()
@@ -91,8 +94,8 @@ def busca_livros_sugestao(page: ft.Page):
                         title=ft.Text(livro["title"]),
                         subtitle=ft.Text(livro["authors"]),
                         on_click=lambda e, livro_id=livro["bookID"]: page.go(
-                            f"/detalhes_livro/{livro_id}"
-                        ),  # Navega para detalhes do livro
+                            f"/book/{livro_id}"
+                        ),
                     )
                 )
         else:

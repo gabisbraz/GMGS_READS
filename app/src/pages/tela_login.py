@@ -150,100 +150,34 @@ def tela_login(page: ft.Page):
     )
 
 
+import flet as ft
+
+
 def tela_login_sucesso(page: ft.Page):
     page.title = "Login Bem-Sucedido"
-    page.window_width = 480
-    page.window_height = 800
+    page.window.width = 480
+    page.window.height = 800
     page.bgcolor = "#FFFFFF"
 
-    with open("assets/celebration.png", "rb") as file:
-        image_celebration = file.read()
+    def handle_navigation(e, page):
+        index = e.control.selected_index
+        if index == 0:
+            page.go("/explore")
+        elif index == 1:
+            page.go("/recommendations")
+        elif index == 2:
+            page.go("/profile")
 
-    content = ft.Container(
-        bgcolor="#FFFFFF",
-        border_radius=ft.border_radius.all(20),  # Aplica a borda arredondada
-        padding=20,  # Adiciona preenchimento interno para que o conteúdo não encoste na borda
-        border=ft.BorderSide(
-            1, color="#D6E0E2"
-        ),  # Adiciona uma borda visível para destacar o arredondamento
-        content=ft.Column(
-            [
-                ft.Text(
-                    "Login realizado com sucesso!",
-                    size=25,
-                    weight="bold",
-                    color="black",
-                    font_family="Sen Extra Bold",
-                ),
-                ft.Image(
-                    src_base64=base64.b64encode(image_celebration).decode("utf-8"),
-                    width=300,
-                    height=300,
-                ),  # Exemplo de GIF ou imagem de sucesso
-                ft.ElevatedButton(
-                    text="Buscar por livros",
-                    on_click=lambda _: page.go("/busca_livros"),
-                    color="black",
-                    bgcolor="#D6E0E2",
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(
-                            font_family="Sen Extra Bold", weight="bold"
-                        )
-                    ),
-                ),
-                ft.ElevatedButton(
-                    text="Busca Inteligente de livros",
-                    on_click=lambda _: page.go("/busca_livros_sugestao"),
-                    color="black",
-                    bgcolor="#D6E0E2",
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(
-                            font_family="Sen Extra Bold", weight="bold"
-                        )
-                    ),
-                ),
-                ft.ElevatedButton(
-                    text="Descobrir novos livros!",
-                    on_click=lambda _: page.go("/discover"),
-                    color="black",
-                    bgcolor="#D6E0E2",
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(
-                            font_family="Sen Extra Bold", weight="bold"
-                        )
-                    ),
-                ),
-                ft.ElevatedButton(
-                    text="Voltar à página inicial",
-                    on_click=lambda _: page.go("/"),
-                    color="black",
-                    bgcolor="#D6E0E2",
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(
-                            font_family="Sen Extra Bold", weight="bold"
-                        )
-                    ),
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,
-        ),
+    # Define a barra de navegação com destinos
+    navigation_bar = ft.NavigationBar(
+        destinations=[
+            ft.NavigationBarDestination(icon=ft.icons.EXPLORE, label="Explore"),
+            ft.NavigationBarDestination(icon=ft.icons.BOOKMARK_BORDER, label="Rec."),
+            ft.NavigationBarDestination(
+                icon=ft.icons.PERSON_OFF_OUTLINED, label="Profile"
+            ),
+        ],
+        on_change=lambda e: handle_navigation(e, page),
     )
 
-    return ft.Container(
-        expand=True,
-        bgcolor="#FFFFFF",
-        content=ft.Row(  # Centraliza o conteúdo horizontalmente e verticalmente
-            [content],
-            alignment=ft.MainAxisAlignment.CENTER,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True,  # Expande para preencher a tela inteira
-        ),
-        border_radius=ft.border_radius.all(
-            20
-        ),  # Adiciona bordas arredondadas ao contêiner principal
-        border=ft.BorderSide(
-            2, color="#D6E0E2"
-        ),  # Adiciona uma borda ao redor do layout principal
-    )
+    # Função para tratar a navegação baseada no índice selecionado
