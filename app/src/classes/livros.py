@@ -3,7 +3,7 @@ from loguru import logger
 
 
 def get_cover_url(isbn):
-    return f"https://covers.openlibrary.org/b/isbn/{isbn}-M.jpg"
+    return "image.jpg"
 
 
 class Livro:
@@ -54,10 +54,7 @@ class Livro:
         """
         try:
             cursor = self.connection.cursor(dictionary=True)
-            query = (
-                "SELECT bookID, title, authors, average_rating, isbn, isbn13, num_pages, ratings_count, publication_date "
-                "FROM Livros ORDER BY RAND() LIMIT 50"
-            )
+            query = "SELECT * FROM Livros ORDER BY RAND() LIMIT 50"
             cursor.execute(query)
             books = cursor.fetchall()
             cursor.close()
@@ -113,6 +110,17 @@ class Livro:
         except mysql.connector.Error as err:
             logger.error(f"Erro ao buscar estantes do usuário {user_id}: {err}")
             return []
+
+    def get_shelf_id_by_name_and_user(self, shelf_name, user_id):
+        cursor = self.connection.cursor(dictionary=True)
+        query = """
+            SELECT estante_id 
+            FROM EstanteUsuario 
+            WHERE nome = %s AND usuario_id = %s;
+        """
+        cursor.execute(query, (shelf_name, user_id))
+        result = cursor.fetchone()
+        return result["estante_id"] if result else None
 
     def add_book_to_shelf(
         self,
@@ -176,7 +184,7 @@ class Livro:
         """
         cursor = self.connection.cursor(dictionary=True)
         query = """
-            SELECT l.bookID, l.title, l.isbn FROM Livros l
+            SELECT * FROM Livros l
             JOIN EstanteLivros el ON l.bookID = el.livro_id
             WHERE el.estante_id = %s
         """
@@ -185,6 +193,81 @@ class Livro:
         cursor.close()
         return books
 
+    def get_shelves_by_book_name(self, book_name):
+        """
+        Retorna todos os IDs das estantes a que o livro pertence, dado o nome do livro.
+        """
+        cursor = self.connection.cursor(dictionary=True)
+        query = """
+            SELECT el.estante_id 
+            FROM EstanteLivros el
+            JOIN Livros l ON el.livro_id = l.bookID
+            WHERE l.title = %s
+        """
+        cursor.execute(query, (book_name,))
+        shelves = cursor.fetchall()  # Retorna todas as estantes associadas ao livro
+
+        cursor.close()
+
+        # Retorna a lista de IDs das estantes, ou uma lista vazia caso não haja nenhum resultado
+        return [shelf["estante_id"] for shelf in shelves] if shelves else []
+
+    def get_book_info(self, book_name):
+        """
+        Retorna todos os IDs das estantes a que o livro pertence, dado o nome do livro.
+        """
+        cursor = self.connection.cursor(dictionary=True)
+        query = """
+            SELECT *
+            FROM EstanteLivros el
+            JOIN Livros l ON el.livro_id = l.bookID
+            WHERE l.title = %s
+        """
+        cursor.execute(query, (book_name,))
+        livro_info = cursor.fetchone()  # Retorna todas as estantes associadas ao livro
+
+        cursor.close()
+
+        # Retorna a lista de IDs das estantes, ou uma lista vazia caso não haja nenhum resultado
+        return livro_info
+
+    def update_book_shelf(
+        self,
+        livro_id,
+        estante_id,
+        nota,
+        comecou_leitura=None,
+        terminou_leitura=None,
+        porcentagem=0,
+    ):
+        """
+        Atualiza os valores de um livro em uma estante específica.
+        """
+        cursor = self.connection.cursor(dictionary=True)
+        query = """
+            UPDATE EstanteLivros
+            SET nota = %s, comecou_leitura = %s, terminou_leitura = %s, porcentagem = %s
+            WHERE livro_id = %s AND estante_id = %s
+        """
+        # Executa a consulta para atualizar os valores do livro
+        cursor.execute(
+            query,
+            (
+                nota,
+                comecou_leitura,
+                terminou_leitura,
+                porcentagem,
+                livro_id,
+                estante_id,
+            ),
+        )
+        self.connection.commit()  # Confirma as alterações no banco de dados
+
+        cursor.close()
+        print(
+            f"Livro {livro_id} atualizado na estante {estante_id} com nota {nota}, progresso {porcentagem}% e datas de leitura."
+        )
+
     def get_user_current_readings(self, user_id):
         """
         Retorna os livros que o usuário está lendo (progresso entre 0 e 100%).
@@ -192,7 +275,7 @@ class Livro:
         cursor = self.connection.cursor(dictionary=True)
 
         query = """
-        SELECT Livros.title, Livros.authors, Livros.isbn, EstanteLivros.porcentagem
+        SELECT *
         FROM Livros
         INNER JOIN EstanteLivros ON Livros.bookID = EstanteLivros.livro_id
         INNER JOIN EstanteUsuario ON EstanteLivros.estante_id = EstanteUsuario.estante_id

@@ -4,3 +4,4 @@ mysql-connector-python
 loguru
 passlib
 bcrypt==4.0.1
+requests

@@ -1,10 +1,9 @@
 import flet as ft
-from flet import Theme
+import os
+import datetime
 import sys
 from pathlib import Path
-from loguru import logger
-import datetime
-from flet import TextField, ElevatedButton, DatePicker, Slider
+from flet import Theme
 
 
 # Define the directory root for image loading
@@ -16,8 +15,34 @@ from src.pages.busca_livros_sugestao import busca_livros_sugestao
 from src.classes.livros import Livro
 
 
-def get_cover_url(isbn):
-    return f"https://covers.openlibrary.org/b/isbn/{isbn}-M.jpg"
+def render_rating_stars(average_rating):
+
+    if average_rating != None:
+        # Converte a avaliação média para o número de estrelas
+        full_stars = int(average_rating)  # Estrelas preenchidas
+        half_star = (
+            float(average_rating) - full_stars >= 0.5
+        )  # Meia estrela se a média tiver uma fração >= 0.5
+        empty_stars = (
+            5 - full_stars - int(half_star)
+        )  # Estrelas vazias para completar 5
+
+        stars = []
+        # Adiciona as estrelas cheias
+        stars.extend([ft.Icon(ft.icons.STAR, color="gold") for _ in range(full_stars)])
+        # Adiciona a meia estrela, se necessário
+        if half_star:
+            stars.append(ft.Icon(ft.icons.STAR_HALF, color="gold"))
+        # Adiciona as estrelas vazias
+        stars.extend(
+            [ft.Icon(ft.icons.STAR_BORDER, color="gold") for _ in range(empty_stars)]
+        )
+
+        return stars
+    else:
+        stars = []
+        stars.extend([ft.Icon(ft.icons.STAR_BORDER, color="gold") for _ in range(5)])
+        return stars
 
 
 def show_profile_page(page, user_id):
@@ -25,14 +50,126 @@ def show_profile_page(page, user_id):
     user_data = {
         "name": "Taylor Swift",
         "image_url": "perfil.jpeg",  # Substitua pelo caminho da imagem real
-        "total_books": 129,
-        "total_authors": 100,
-        "estantes": 3,
+        "total_books": 5,
+        "estantes": 4,
     }
 
     # Busca livros que o usuário está atualmente lendo
     table_connection = Livro()
     current_readings = table_connection.get_user_current_readings(user_id)
+
+    book_rows = []
+    for book in current_readings:  # Usa a lista de livros em progresso
+        img_path = book.get("title", "1984").replace(" ", "_")
+        img_path = Path(DIR_ROOT, f"assets/{img_path}_img.png")
+        if not os.path.exists(img_path):
+            img_path = Path(DIR_ROOT, f"assets/default.png")
+
+        try:
+            if book.get("comecou_leitura") != None:
+                comeca_day = book.get("comecou_leitura").strftime("%d / %m / %Y")
+
+            else:
+                comeca_day = "-"
+        except Exception:
+            comeca_day = "-"
+        try:
+            if book.get("terminou_leitura") != None:
+                termina_day = book.get("terminou_leitura").strftime("%d / %m / %Y")
+
+            else:
+                termina_day = "-"
+        except Exception:
+            termina_day = "-"
+
+        try:
+            if book.get("porcentagem") != None:
+                porcent_num = book.get("porcentagem", 100) / 100
+                porcent_str = f"{porcent_num} %"
+            else:
+                porcent_num = 0
+                porcent_str = f"0 %"
+        except Exception:
+            porcent_str = f"0 %"
+            porcent_num = 0
+
+        # Aqui você pode construir cada linha para o livro
+        book_row = ft.Row(
+            controls=[
+                ft.Image(
+                    src=img_path,
+                    width=100,
+                    height=150,
+                ),
+                ft.Column(
+                    [
+                        ft.Text(
+                            book["title"],
+                            size=15,
+                            weight="bold",
+                            width=260,
+                            text_align=ft.TextAlign.LEFT,
+                        ),
+                        ft.Text(
+                            book["authors"],
+                            size=13,
+                            weight="bold",
+                            width=260,
+                            text_align=ft.TextAlign.LEFT,
+                        ),
+                        ft.Row(
+                            controls=[
+                                *render_rating_stars(book.get("nota")),
+                                ft.Text(
+                                    str(book.get("nota", 0)),
+                                    size=12,
+                                    weight="bold",
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                        ft.Row(
+                            controls=[
+                                ft.ProgressBar(
+                                    value=porcent_num,
+                                    width=100,
+                                    height=10,
+                                    border_radius=10,
+                                ),
+                                ft.Container(
+                                    content=ft.Text(
+                                        porcent_str,
+                                        size=12,
+                                    ),
+                                    alignment=ft.alignment.center_right,
+                                ),
+                            ]
+                        ),
+                        ft.Row(
+                            controls=[
+                                ft.Text(
+                                    comeca_day,
+                                    size=12,
+                                ),
+                                ft.Text(
+                                    f" | ",
+                                    size=12,
+                                ),
+                                ft.Text(
+                                    termina_day,
+                                    size=12,
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+            ],
+            spacing=10,
+            alignment=ft.MainAxisAlignment.START,
+            vertical_alignment=ft.VerticalAlignment.START,
+        )
+        # Adiciona o livro ao histórico de livros
+        book_rows.append(book_row)
 
     # Layout do perfil
     profile_layout = ft.Column(
@@ -40,7 +177,10 @@ def show_profile_page(page, user_id):
             ft.Row(
                 controls=[
                     ft.Image(
-                        src=user_data["image_url"],
+                        src=Path(
+                            DIR_ROOT,
+                            f"assets/perfil.jpeg",
+                        ),
                         width=100,
                         height=100,
                         border_radius=70,
@@ -48,7 +188,7 @@ def show_profile_page(page, user_id):
                     ),
                     ft.Column(
                         controls=[
-                            ft.Text("Welcome back,", size=16),
+                            ft.Text("Bem-vindo(a),", size=16),
                             ft.Text(user_data["name"], size=24, weight="bold"),
                         ],
                         alignment=ft.MainAxisAlignment.START,
@@ -60,7 +200,7 @@ def show_profile_page(page, user_id):
             ft.Divider(height=10, color="black"),
             ft.Row(
                 controls=[
-                    ft.Column(
+                    ft.Row(
                         [
                             ft.Text(
                                 str(user_data["total_books"]), size=24, weight="bold"
@@ -69,16 +209,7 @@ def show_profile_page(page, user_id):
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
-                    ft.Column(
-                        [
-                            ft.Text(
-                                str(user_data["total_authors"]), size=24, weight="bold"
-                            ),
-                            ft.Text("Autores"),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                    ),
-                    ft.Column(
+                    ft.Row(
                         [
                             ft.Text(str(user_data["estantes"]), size=24, weight="bold"),
                             ft.Text("Estantes"),
@@ -91,43 +222,16 @@ def show_profile_page(page, user_id):
             ft.Divider(height=10, color="black"),
             ft.Column(
                 controls=[
-                    ft.Text("Continue Reading", size=20, weight="bold"),
+                    ft.Text("Seu histórico", size=20, weight="bold"),
                 ]
-                + [
-                    ft.Row(
-                        controls=[
-                            ft.Image(
-                                src=get_cover_url(book["isbn"]), width=50, height=70
-                            ),
-                            ft.Column(
-                                controls=[
-                                    ft.Text(book["title"], size=18, weight="bold"),
-                                    ft.Text(book["authors"], size=16),
-                                    ft.Container(
-                                        content=ft.Text(
-                                            f"{book['porcentagem']}%", size=16
-                                        ),
-                                        alignment=ft.alignment.center_right,
-                                    ),
-                                    ft.ProgressBar(
-                                        value=book["porcentagem"] / 100,
-                                        width=100,
-                                        height=6,
-                                    ),
-                                ],
-                                alignment=ft.MainAxisAlignment.START,
-                            ),
-                        ],
-                        spacing=10,
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    )
-                    for book in current_readings  # Usa a lista de livros em progresso
-                ]
+                + book_rows,
+                alignment=ft.MainAxisAlignment.START,
             ),
         ],
         alignment=ft.MainAxisAlignment.START,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         spacing=20,
+        scroll=ft.ScrollMode.HIDDEN,
     )
 
     return profile_layout
@@ -154,14 +258,53 @@ def show_shelves_page(page, user_id):
         )
 
         for book in books:
+            img_path = book.get("title", "1984").replace(" ", "_")
+            img_path = Path(DIR_ROOT, f"assets/{img_path}_img.png")
+            if not os.path.exists(img_path):
+                img_path = Path(DIR_ROOT, f"assets/default.png")
             books_list.controls.append(
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Image(
-                                src=get_cover_url(book["isbn"]), width=100, height=150
+                            ft.Row(
+                                controls=[
+                                    ft.Image(
+                                        src=img_path,
+                                        width=100,
+                                        height=150,
+                                    ),
+                                    ft.Column(
+                                        [
+                                            ft.Text(
+                                                book["title"],
+                                                size=15,
+                                                weight="bold",
+                                                width=260,
+                                                text_align=ft.TextAlign.LEFT,
+                                            ),
+                                            ft.Text(
+                                                book["authors"],
+                                                size=13,
+                                                weight="bold",
+                                                width=260,
+                                                text_align=ft.TextAlign.LEFT,
+                                            ),
+                                            ft.Text(
+                                                book["description"],
+                                                size=11,
+                                                weight="bold",
+                                                overflow=ft.TextOverflow.FADE,
+                                                width=260,
+                                                height=100,
+                                                text_align=ft.TextAlign.JUSTIFY,
+                                            ),
+                                        ]
+                                    ),
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                                vertical_alignment=ft.VerticalAlignment.START,
                             ),
-                            ft.Text(book["title"], size=18, weight="bold"),
+                            ft.Divider(height=1, color="grey"),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
@@ -210,154 +353,120 @@ def show_shelves_page(page, user_id):
     )
 
 
-def show_shelf_books(page, estante_id):
-    """
-    Exibe todos os livros de uma estante específica.
-    """
-    table_connection = Livro()
-    books = table_connection.get_books_in_shelf(estante_id)
-
-    # Lista os livros da estante
-    books_list = ft.Column(
-        controls=[
-            ft.Text(f"Livros na Estante", size=24, weight="bold"),
-        ],
-        alignment=ft.MainAxisAlignment.START,
-    )
-
-    for book in books:
-        books_list.controls.append(
-            ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Image(
-                            src=get_cover_url(book["isbn"]), width=100, height=150
-                        ),  # Coloque a imagem do livro aqui
-                        ft.Text(book["title"], size=18, weight="bold"),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                ),
-                on_click=lambda e, book_id=book["bookID"]: page.go(f"/book/{book_id}"),
-            )
-        )
-
-    return books_list
-
-
-def show_create_shelf_modal(page, user_id):
-    """
-    Cria e exibe um modal para que o usuário crie uma nova estante.
-    """
-    # Contêiner do modal
-    shelf_name_input = ft.TextField(label="Nome da Estante", autofocus=True)
-
-    # Função para adicionar a nova estante
-    def add_shelf(e):
-        shelf_name = shelf_name_input.value
-        if shelf_name:
-            table_connection = Livro()
-            table_connection.create_shelf(user_id, shelf_name)
-            page.update()  # Atualiza a página para refletir a nova estante
-
-    def fecha_dialog():
-        page.dialog.open = False
-        page.update()
-
-    # Conteúdo do modal
-    modal_content = ft.Column(
-        controls=[
-            shelf_name_input,
-            ft.ElevatedButton("Criar Estante", on_click=add_shelf),
-            ft.ElevatedButton("Fechar", on_click=lambda e: fecha_dialog()),
-        ],
-        alignment=ft.MainAxisAlignment.START,
-    )
-
-    # Criação do modal
-    modal = ft.AlertDialog(
-        title=ft.Text("Criar Nova Estante"),
-        content=modal_content,
-    )
-
-    page.dialog = modal
-    modal.open = True
-    page.update()
-
-
 def show_shelves_modal(book, user_id, page):
     """
-    Cria e exibe um modal mostrando a imagem do livro e todas as estantes do usuário,
-    com campos adicionais para inserir progresso, data de início, data de término e nota.
+    Cria e exibe um modal para adicionar um livro a uma estante com a opção de criar nova estante.
     """
     table_connection = Livro()
     shelves = table_connection.get_user_shelves(user_id)
 
-    # Inputs para os dados adicionais
-    progress_input = Slider(value=0, min=0, max=100, label="Porcentagem de Leitura (%)")
-    start_date_picker = DatePicker(
-        tooltip="Data de Início da Leitura", value=datetime.date.today()
+    # Dropdown para selecionar a estante
+    shelf_dropdown = ft.Dropdown(
+        label="Selecione uma estante",
+        options=[ft.dropdown.Option(shelf["nome"]) for shelf in shelves],
+        width=300,
     )
-    end_date_picker = DatePicker(tooltip="Data de Término da Leitura")
-    rating_input = TextField(label="Nota (0-10)", keyboard_type="number", max_length=2)
 
-    # Função para adicionar o livro na estante selecionada com dados adicionais
-    def add_to_shelf(estante_id):
-        porcentagem = progress_input.value
-        comecou_leitura = start_date_picker.value
-        terminou_leitura = end_date_picker.value
-        nota = rating_input.value
+    # Campo para nome da nova estante, inicialmente oculto
+    new_shelf_name_input = ft.TextField(
+        label="Nome da nova estante", width=180, visible=True, border_radius=20
+    )
 
-        # Insere o livro na estante com as informações fornecidas
-        table_connection.add_book_to_shelf(
-            estante_id,
-            book["bookID"],
-            porcentagem=porcentagem,
-            comecou_leitura=comecou_leitura,
-            terminou_leitura=terminou_leitura,
-            nota=nota,
-        )
-        page.dialog.open = False
-        page.update()
-        logger.info(
-            f"Livro {book['bookID']} adicionado à estante {estante_id} com progresso {porcentagem}% e nota {nota}"
-        )
+    # Função para criar uma nova estante e atualizar o Dropdown
+    def on_create_shelf_click(e):
+        if new_shelf_name_input != None:
+            if new_shelf_name_input.visible:
+                shelf_name = new_shelf_name_input.value
+                if shelf_name:
+                    try:
+                        table_connection.create_shelf(user_id, shelf_name)
+                        new_shelf = table_connection.get_user_shelves(user_id)[-1]
+                        shelf_dropdown.options.append(
+                            ft.dropdown.Option(new_shelf["nome"])
+                        )
+                        page.update()
+                    except Exception as err:
+                        page.open(f"Erro ao criar estante: {str(err)}")
+            else:
+                new_shelf_name_input.visible = True
+            page.update()
+
+    # Função para adicionar o livro à estante selecionada
+    def add_to_shelf():
+        estante_id = shelf_dropdown.value  # Obtém o ID da estante selecionada
+        livro_id = book["bookID"]  # ID do livro a ser adicionado
+
+        if not estante_id:
+            page.open("Por favor, selecione uma estante antes de adicionar o livro.")
+            return
+
+        # Insere o livro na tabela 'EstanteLivros' com valores nulos para os campos adicionais
+        try:
+            estante_id = table_connection.get_shelf_id_by_name_and_user(estante_id, 1)
+            table_connection.add_book_to_shelf(
+                estante_id=estante_id,
+                livro_id=livro_id,
+                comecou_leitura=None,
+                terminou_leitura=None,
+                porcentagem=None,
+                nota=None,
+            )
+            page.dialog.open = False  # Fecha o modal após a inserção
+            page.update()
+            print(f"Livro {livro_id} adicionado à estante {estante_id}.")
+        except Exception as err:
+            print(f"Erro ao adicionar livro à estante: {str(err)}")
+
+    img_path = book.get("title", "1984").replace(" ", "_")
+    img_path = Path(DIR_ROOT, f"assets/{img_path}_img.png")
+    if not os.path.exists(img_path):
+        img_path = Path(DIR_ROOT, f"assets/default.png")
 
     # Conteúdo do modal
     modal_content = ft.Column(
         controls=[
-            ft.Text(f"Estantes para o livro: {book['title']}", size=20, weight="bold"),
-            ft.Image(
-                src="image.jpg", width=100, height=150
-            ),  # Coloque a imagem do livro aqui
-            ft.Text("Escolha uma estante:", size=18),
-            progress_input,
-            start_date_picker,
-            end_date_picker,
-            rating_input,
-        ],
-        alignment=ft.MainAxisAlignment.START,
-    )
-
-    # Adiciona as estantes ao modal com a função de on_click para cada botão
-    for shelf in shelves:
-        modal_content.controls.append(
-            ElevatedButton(
-                shelf["nome"],
-                on_click=lambda e, estante_id=shelf["estante_id"]: add_to_shelf(
-                    estante_id
+            ft.Container(
+                content=ft.Image(
+                    src=img_path,
+                    width=130,
+                    height=150,
                 ),
-            )
-        )
-
-    def fecha_dialog():
-        page.dialog.open = False
-        page.update()
+                bgcolor="grey",
+                padding=ft.Padding(left=80, right=80, top=30, bottom=30),
+                border_radius=10,
+            ),
+            ft.Text(
+                book["title"],
+                size=17,
+                weight="bold",
+                text_align=ft.TextAlign.CENTER,
+            ),
+            ft.Divider(height=1, color="grey"),
+            shelf_dropdown,
+            ft.Divider(height=1, color="grey"),
+            ft.Row(
+                controls=[
+                    new_shelf_name_input,
+                    ft.ElevatedButton(
+                        "Criar Estante", on_click=on_create_shelf_click, width=100
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            ft.ElevatedButton(
+                "Atualizar",
+                on_click=lambda e: add_to_shelf(),  # Chamando a função para adicionar à estante
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    )
 
     # Criação do modal
     modal = ft.AlertDialog(
-        title=ft.Text("Selecione uma Estante e Insira Detalhes"),
+        title=ft.Text("Acompanhe suas leituras!"),
         content=modal_content,
-        actions=[ElevatedButton("Fechar", on_click=lambda e: fecha_dialog())],
+        scrollable=ft.ScrollMode.HIDDEN,
     )
 
     page.overlay.append(modal)
@@ -369,25 +478,34 @@ def discover_livros(page):
 
     table_connection = Livro()
 
-    grid_view = ft.GridView(spacing=10, runs_count=3, max_extent=150, expand=True)
+    grid_view = ft.GridView(
+        spacing=10,
+        runs_count=3,
+        max_extent=150,
+        expand=True,
+    )
 
     livros = table_connection.search_random_books()
 
     # Add book items to the GridView
     for livro in livros:
+        img_path = livro.get("title", "1984").replace(" ", "_")
+        img_path = Path(DIR_ROOT, f"assets/{img_path}_img.png")
+        if not os.path.exists(img_path):
+            img_path = Path(DIR_ROOT, f"assets/default.png")
         grid_view.controls.append(
             ft.Container(
                 content=ft.Column(
                     [
                         ft.Image(
-                            src=get_cover_url(livro["isbn"]),
+                            src=img_path,
                             width=100,
                             height=100,
                             expand=True,
                         ),
                         ft.Text(
                             livro["title"],
-                            size=18,
+                            size=12,
                             weight="bold",
                             overflow=False,
                             max_lines=1,
@@ -396,11 +514,193 @@ def discover_livros(page):
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                on_click=lambda e, livro=livro: page.go(f"/book/{livro["bookID"]}"),
+                on_click=lambda e, book_id=livro["bookID"]: page.go(f"/book/{book_id}"),
             )
         )
 
     return grid_view
+
+
+def avaliar_livro(page, livro, usuario_id):
+    """
+    Exibe um modal para o usuário avaliar o livro.
+    """
+    table_connection = Livro()
+
+    livro_info = table_connection.get_book_info(livro["title"])
+
+    if livro_info == None:
+        livro_info = {
+            "comecou_leitura": datetime.date.today(),
+            "terminou_leitura": datetime.date.today(),
+            "nota": 0,
+            "porcentagem": 0,
+        }
+    started_date = livro_info.get("comecou_leitura", datetime.date.today())
+    finished_date = livro_info.get("terminou_leitura", datetime.date.today())
+    nota_input = ft.TextField(
+        label="Avaliação (de 1 a 5)",
+        keyboard_type="number",
+        width=300,
+        border_radius=20,
+        value=livro_info.get("nota", 0),
+        icon=ft.Icon(ft.icons.SCORE_ROUNDED, color="gold"),
+    )
+    porcent_input = ft.TextField(
+        label="Porcentagem de leitura",
+        keyboard_type="number",
+        width=300,
+        border_radius=20,
+        value=livro_info.get("porcentagem", 0),
+        icon=ft.Icon(ft.icons.SCORE_ROUNDED, color="gold"),
+    )
+
+    # Função para atualizar as datas
+    def on_date_picker_change(e, field_name):
+        nonlocal started_date, finished_date
+        if field_name == "start":
+            started_date = e.control.value
+        elif field_name == "end":
+            finished_date = e.control.value
+
+    # Botões de Data
+    start_date_picker = ft.ElevatedButton(
+        "Iniciou em:",
+        icon=ft.icons.CALENDAR_MONTH,
+        width=140,
+        on_click=lambda e: page.open(
+            ft.DatePicker(
+                tooltip="Início da Leitura",
+                field_label_text="Início da Leitura",
+                visible=True,
+                value=started_date,
+                on_change=lambda e: on_date_picker_change(
+                    e, "start"
+                ),  # Atualiza a data de início
+            ),
+        ),
+    )
+    end_date_picker = ft.ElevatedButton(
+        "Terminou em:",
+        icon=ft.icons.CALENDAR_MONTH,
+        width=140,
+        on_click=lambda e: page.open(
+            ft.DatePicker(
+                tooltip="Término da Leitura",
+                field_label_text="Término da Leitura",
+                visible=True,
+                value=finished_date,
+                on_change=lambda e: on_date_picker_change(
+                    e, "end"
+                ),  # Atualiza a data de término
+            ),
+        ),
+    )
+
+    def on_avaliar_click(e):
+        try:
+            # Obtém a nota inserida pelo usuário
+            nota = float(nota_input.value)
+
+            # Verifica se a nota é válida
+            if nota < 1 or nota > 5:
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("A avaliação deve ser entre 1 e 5!"), bgcolor="red"
+                )
+                page.snack_bar.open = True
+                page.update()
+                return
+
+            list_id = table_connection.get_shelves_by_book_name(livro["title"])
+
+            for id_estante in list_id:
+                # Salva a avaliação no banco de dados
+                table_connection.update_book_shelf(
+                    livro["bookID"],
+                    id_estante,
+                    nota,
+                    porcentagem=int(porcent_input.value),
+                    comecou_leitura=started_date,
+                    terminou_leitura=finished_date,
+                )
+
+            if len(list_id) == 0:
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("Você precisa adicionar o livro a uma estante!"),
+                    bgcolor="red",
+                )
+                page.snack_bar.open = True
+                # Fecha o modal
+                page.update()
+            else:
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("Avaliação salva com sucesso!"), bgcolor="green"
+                )
+                page.snack_bar.open = True
+                # Fecha o modal
+                page.update()
+
+            print("Avaliação salva com sucesso!")
+
+        except ValueError:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Por favor, insira uma nota válida!"), bgcolor="red"
+            )
+            page.snack_bar.open = True
+            # Caso o usuário insira um valor inválido
+            print("Por favor, insira uma nota válida!")
+
+    img_path = livro.get("title", "1984").replace(" ", "_")
+    img_path = Path(DIR_ROOT, f"assets/{img_path}_img.png")
+    if not os.path.exists(img_path):
+        img_path = Path(DIR_ROOT, f"assets/default.png")
+
+    # Conteúdo do modal
+    modal_content = ft.Column(
+        controls=[
+            ft.Container(
+                content=ft.Image(
+                    src=img_path,
+                    width=230,
+                    height=300,
+                ),
+                bgcolor="grey",
+                padding=ft.Padding(left=80, right=80, top=10, bottom=10),
+                border_radius=20,
+            ),
+            ft.Text(livro.get("title", "-"), size=17, weight="bold"),
+            ft.Text("", size=17, weight="bold"),
+            nota_input,
+            porcent_input,
+            ft.Row(
+                controls=[
+                    start_date_picker,
+                    end_date_picker,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            ft.ElevatedButton(
+                "Avaliar",
+                on_click=on_avaliar_click,
+                width=200,
+                bgcolor="gold",
+            ),
+            ft.Text("\n", size=17, weight="bold"),
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+    # Criação do modal
+    modal = ft.AlertDialog(
+        title=ft.Text("Avaliação do Livro", weight="bold"),
+        content=modal_content,
+        scrollable=ft.ScrollMode.HIDDEN,
+    )
+
+    page.overlay.append(modal)
+    modal.open = True
+    page.update()
 
 
 def book_details(bookID, page):
@@ -414,35 +714,118 @@ def book_details(bookID, page):
     table_connection = Livro()
     livro = table_connection.get_book_by_id(bookID)
 
-    # Exemplo de usuario_id (isto deve ser obtido de alguma forma na sua aplicação)
-    usuario_id = 1  # Substitua pelo ID real do usuário
-
-    return ft.Column(
-        controls=[
-            ft.Image(
-                src=get_cover_url(livro["isbn"]), width=200, height=300
-            ),  # Imagem da capa do livro
-            ft.Text(livro.get("title", "-"), size=24, weight="bold"),  # Título do livro
-            ft.ElevatedButton(
-                "Estante",
-                on_click=lambda e: show_shelves_modal(
-                    livro, usuario_id, page
-                ),  # Chama o modal
-            ),
-            ft.ElevatedButton(
-                "Criar Nova Estante",
-                on_click=lambda e: show_create_shelf_modal(
-                    page, usuario_id
-                ),  # Chama o modal de criação de estante
-            ),
-            ft.Text(livro.get("authors", "-"), size=20),  # Autor do livro
-            ft.Text(livro.get("average_rating", "-"), size=16),  # Avaliação média
-            ft.Text(livro.get("ratings_count", "-"), size=16),  # Contagem de avaliações
-            ft.Text(livro.get("num_pages", "-"), size=16),  # Número de páginas
-        ],
-        alignment=True,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        width=480,
+    usuario_id = 1
+    img_path = livro.get("title", "1984").replace(" ", "_")
+    img_path = Path(DIR_ROOT, f"assets/{img_path}_img.png")
+    if not os.path.exists(img_path):
+        img_path = Path(DIR_ROOT, f"assets/default.png")
+    genero = livro.get("genres", "-")
+    pag = livro.get("num_pages", "-")
+    return ft.Container(
+        ft.Column(
+            controls=[
+                ft.Container(
+                    content=ft.Image(
+                        src=img_path,
+                        width=230,
+                        height=300,
+                    ),
+                    bgcolor="grey",
+                    padding=ft.Padding(left=80, right=80, top=10, bottom=10),
+                    border_radius=20,
+                ),
+                ft.Text(livro.get("title", "-"), size=24, weight="bold"),
+                ft.Divider(height=1, color="grey"),
+                ft.Row(
+                    controls=[
+                        *render_rating_stars(livro.get("average_rating", 0)),
+                        ft.Text(
+                            str(livro.get("average_rating", "-")),
+                            size=12,
+                            weight="bold",
+                        ),
+                        ft.Text(
+                            f"{livro.get('ratings_count', '-')} avaliações",
+                            size=12,
+                            weight="bold",
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                ft.Row(
+                    controls=[
+                        ft.Text(
+                            f"Gênero: {genero}",
+                            size=12,
+                            weight="bold",
+                        ),
+                        ft.Text(
+                            f" | ",
+                            size=17,
+                            weight="bold",
+                        ),
+                        ft.Text(
+                            f"{pag} páginas",
+                            size=12,
+                            weight="bold",
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                ft.Divider(height=1, color="grey"),
+                ft.Row(
+                    controls=[
+                        ft.ElevatedButton(
+                            "Adicionar a estante",
+                            on_click=lambda e: show_shelves_modal(
+                                livro, usuario_id, page
+                            ),  # Chama o modal  # Link para pesquisa
+                            icon=ft.icons.BOOKMARK_ADDED_ROUNDED,
+                            width=150,
+                        ),
+                        ft.ElevatedButton(
+                            "Avaliar",
+                            on_click=lambda e: avaliar_livro(page, livro, usuario_id),
+                            icon=ft.icons.RATE_REVIEW_ROUNDED,
+                            width=150,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                ft.Text(
+                    livro.get("description", "-"),
+                    size=12,
+                    text_align=ft.TextAlign.JUSTIFY,
+                ),
+                ft.Text(
+                    "Veja mais!",
+                    size=17,
+                    text_align=ft.TextAlign.JUSTIFY,
+                    weight="bold",
+                ),
+                ft.Row(
+                    controls=[
+                        ft.ElevatedButton(
+                            "Pesquisar",
+                            url=livro.get("search", "-"),
+                            icon=ft.icons.SEARCH,
+                        ),
+                        ft.ElevatedButton(
+                            "Google Books",
+                            url=livro.get("google_book", "-"),
+                            icon=ft.icons.BOOK,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                ft.Text(f"\n", size=17, weight="bold"),
+            ],
+            alignment=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            scroll=ft.ScrollMode.HIDDEN,
+        ),
+        margin=ft.Margin(left=25, right=25, top=0, bottom=0),
+        width=470,
     )
 
 
@@ -487,15 +870,7 @@ def main(page: ft.Page):
             )
         ),
         height=70,
-    )
-
-    # Home content
-    home_content = ft.Column(
-        controls=[
-            ft.Text("Eterno GMG!", size=20, weight="bold"),
-        ],
-        alignment="center",
-        spacing=10,
+        selected_index=1,
     )
 
     # Container to hold the page content
@@ -505,9 +880,7 @@ def main(page: ft.Page):
     def route_change(e):
         container_pagina.clean()  # Clear previous controls
         user_id = 1
-        if page.route == "/":
-            container_pagina.content = home_content
-        elif page.route == "/profile":
+        if page.route == "/profile":
             container_pagina.content = show_profile_page(page, user_id)
         elif page.route == "/explore":
             container_pagina.content = discover_livros(page)
@@ -516,9 +889,6 @@ def main(page: ft.Page):
             container_pagina.content = book_details(book_id, page)
         elif page.route == "/shelves":
             container_pagina.content = show_shelves_page(page, user_id)
-        elif page.route.startswith("/shelf/"):
-            estante_id = int(page.route.split("/")[-1])  # Extract shelf ID from route
-            container_pagina.content = show_shelf_books(page, estante_id)
         elif page.route.startswith("/busca_livro"):
             container_pagina.content = busca_livros_sugestao(page)
 
@@ -529,7 +899,7 @@ def main(page: ft.Page):
 
     # Start the app on the home route
     page.add(container_pagina)  # Add the container to the page
-    page.go(route="/")  # Initial route
+    page.go(route="/explore")  # Initial route
 
 
 ft.app(target=main)
